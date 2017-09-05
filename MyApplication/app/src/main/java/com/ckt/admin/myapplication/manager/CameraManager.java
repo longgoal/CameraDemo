@@ -18,9 +18,6 @@ public interface CameraManager {
 
     public void release();
 
-
-
-
     /**
      * Camera Proxy interface
      */
