@@ -11,12 +11,19 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.ckt.admin.myapplication.MainActivity">
 
+
+    <TextView
+        android:id="@+id/tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <SurfaceView
         android:id="@+id/surfaceview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:visibility="gone"
         />
 
     <ImageButton

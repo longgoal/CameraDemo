@@ -3,12 +3,16 @@ package com.ckt.admin.myapplication.manager;
 import android.hardware.Camera;
 import android.util.Log;
 
+import java.lang.reflect.Method;
+
 /**
  * Created by admin on 2017/9/3.
  * current open single camera
  */
 
 public class CameraManagerImp implements CameraManager {
+    private static final int CAMERA_HAL_API_VERSION_1_0 = 0x100;
+
     private static final String TAG = "CameraManagerImpl";
 
     private CameraPorxy mCameraPorxy;
@@ -54,12 +58,21 @@ public class CameraManagerImp implements CameraManager {
 
         Camera camera;
 
-        public CameraProxyImpl(){}
+        public CameraProxyImpl(){
+
+        }
 
         @Override
         public CameraProxyImpl openCamera(int camId) {
+            /*可能有些系统有限制就要只能在运行时候用反射进行调用*/
+            try {
+                Method openMethod = Class.forName("android.hardware.Camera").getMethod(
+                        "openLegacy", int.class, int.class);
+                camera = (Camera) openMethod.invoke(null,camId,CAMERA_HAL_API_VERSION_1_0);
 
-            camera = camera.open(camId);
+            } catch (Exception e) {
+                camera = Camera.open(camId);
+            }
             if (camera == null)
                 return null;
             return this;
