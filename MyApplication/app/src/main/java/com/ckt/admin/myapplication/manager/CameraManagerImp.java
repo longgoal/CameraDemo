@@ -2,7 +2,9 @@ package com.ckt.admin.myapplication.manager;
 
 import android.hardware.Camera;
 import android.util.Log;
+import android.view.SurfaceHolder;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 
 /**
@@ -17,15 +19,15 @@ public class CameraManagerImp implements CameraManager {
 
     private CameraPorxy mCameraPorxy;
 
-    public CameraManagerImp(){
+    public CameraManagerImp() {
         mCameraPorxy = new CameraProxyImpl();
     }
 
     @Override
     public int getCameraNums() {
-       int nums = Camera.getNumberOfCameras();
+        int nums = Camera.getNumberOfCameras();
         if (nums == 0)
-            Log.d(TAG,"getCameraNums():camera num is 0 can not exe camera ");
+            Log.d(TAG, "getCameraNums():camera num is 0 can not exe camera ");
         return nums;
     }
 
@@ -46,19 +48,18 @@ public class CameraManagerImp implements CameraManager {
 
     @Override
     public void release() {
-        mCameraPorxy.relase();
+        mCameraPorxy.release();
     }
 
 
     /**
-     *  camera proxy impl
-     *
+     * camera proxy impl
      */
     public class CameraProxyImpl implements CameraPorxy {
 
         Camera camera;
 
-        public CameraProxyImpl(){
+        public CameraProxyImpl() {
 
         }
 
@@ -68,8 +69,7 @@ public class CameraManagerImp implements CameraManager {
             try {
                 Method openMethod = Class.forName("android.hardware.Camera").getMethod(
                         "openLegacy", int.class, int.class);
-                camera = (Camera) openMethod.invoke(null,camId,CAMERA_HAL_API_VERSION_1_0);
-
+                camera = (Camera) openMethod.invoke(null, camId, CAMERA_HAL_API_VERSION_1_0);
             } catch (Exception e) {
                 camera = Camera.open(camId);
             }
@@ -84,13 +84,44 @@ public class CameraManagerImp implements CameraManager {
         }
 
         @Override
-        public void relase() {
-            camera.release();
+        public void setCameraParameters(Camera.Parameters cameraParameters) {
+            camera.setParameters(cameraParameters);
         }
 
         @Override
-        public void setCameraParameters(Camera.Parameters cameraParameters) {
-            camera.setParameters(cameraParameters);
+        public void setSurfaceHolder(SurfaceHolder surfaceHolder) {
+
+            try {
+                camera.setPreviewDisplay(surfaceHolder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void startPreview() {
+            camera.startPreview();
+        }
+
+        @Override
+        public void stopPreview() {
+            camera.stopPreview();
+        }
+
+        @Override
+        public void release() {
+            camera.release();
+            camera = null;
+        }
+
+        @Override
+        public void setRotation() {
+
+        }
+
+        @Override
+        public void setDisplayOrientation(int rotation) {
+            camera.setDisplayOrientation(rotation);
         }
     }
 }
