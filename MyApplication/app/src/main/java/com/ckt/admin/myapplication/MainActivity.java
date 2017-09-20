@@ -4,8 +4,11 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Canvas;
 import android.hardware.Camera;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Telephony;
@@ -18,7 +21,9 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
@@ -28,12 +33,19 @@ import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
 
 import java.io.IOException;
+import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
     private static final int MAIN_CAMERA_ID = 0;
     private static final int SUB_CAMERA_ID = 2;
+
+    private final int OPEN_CAMERA = 0;
+    private final int START_PREVIEW = 1;
+    private final int STOP_PREVIEW = 2;
+    private final int RELEASE = 3;
+    private final int TAKE_PICTURE = 4;
 
     private CameraManager mCameraManager;
     private CameraPorxy mCameraProxyImp;
@@ -44,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
+    private Handler CameraCmdHnadler;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -61,10 +74,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private void init() {
         mTextView = (TextView) findViewById(R.id.tv);
+        mImageButton = (ImageButton) findViewById(R.id.btn_shutter);
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
+        mImageButton.setOnClickListener(this);
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mCameraManager = new CameraManagerImp();
+        CameraCmdHnadler = new CameraHandler();
     }
 
     /**
@@ -108,10 +124,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         Log.d(TAG, "surfaceCreated");
-        Log.d(TAG, "init():camera numbers ->" + mCameraManager.getCameraNums());
         mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
         mParamters = mCameraProxyImp.getCameraParameters();
-        //mParamters.setRotation(CameraParameters.PREVIEW_ROTATION_90);
+
         mCameraProxyImp.setCameraParameters(mParamters);
         mCameraProxyImp.setSurfaceHolder(surfaceHolder);
         //调整输出预览数据的方向
@@ -129,5 +144,55 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         Log.d(TAG, "surfaceDestroyed");
         mCameraProxyImp.stopPreview();
         mCameraProxyImp.release();
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btn_shutter:
+                CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
+                break;
+            default:
+                //nothing to do
+                break;
+        }
+    }
+
+    public class CameraHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case OPEN_CAMERA:
+                    break;
+
+                case START_PREVIEW:
+                    break;
+
+                case STOP_PREVIEW:
+                    break;
+
+                case RELEASE:
+                    break;
+
+                case TAKE_PICTURE:
+                    mCameraProxyImp.takePicture(null, null, null, new CameraManager.CameraPictureCallback() {
+                        @Override
+                        public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
+                            cameraProxy.startPreview();
+                            Toast.makeText(MainActivity.this, "拍照成功", Toast.LENGTH_SHORT).show();
+                            return 0;
+                        }
+                    });
+                    break;
+
+                default:
+                    //nothing to do
+                    break;
+
+
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.ckt.admin.myapplication.manager;
 
 import android.hardware.Camera;
+import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
@@ -58,6 +59,7 @@ public class CameraManagerImp implements CameraManager {
     public class CameraProxyImpl implements CameraPorxy {
 
         Camera camera;
+
 
         public CameraProxyImpl() {
 
@@ -123,5 +125,64 @@ public class CameraManagerImp implements CameraManager {
         public void setDisplayOrientation(int rotation) {
             camera.setDisplayOrientation(rotation);
         }
+
+        @Override
+        public void takePicture(CameraShutterCallback shutterCallback, CameraPictureCallback rawCallback, CameraPictureCallback postviewCallback, CameraPictureCallback jpegCallback) {
+            ShutterCallbackForward shutterCallbackForward = new ShutterCallbackForward(null, shutterCallback, this);
+            PictureCallbackForward pictureCallbackForwardrRaw = new PictureCallbackForward(null, rawCallback, this);
+            PictureCallbackForward pictureCallbackForwardPostView = new PictureCallbackForward(null, postviewCallback, this);
+            PictureCallbackForward pictureCallbackForwardJpeg = new PictureCallbackForward(null, jpegCallback, this);
+            camera.takePicture(shutterCallbackForward, pictureCallbackForwardrRaw, pictureCallbackForwardPostView, pictureCallbackForwardJpeg);
+            Log.d(TAG,"Picture OK");
+        }
+
     }
+
+    public class ShutterCallbackForward implements Camera.ShutterCallback {
+
+        private Handler handler;
+        private CameraShutterCallback shutterCallback;
+        private CameraPorxy cameraPorxy;
+
+        public ShutterCallbackForward(Handler handler1, CameraShutterCallback shutterCallback1, CameraPorxy cameraPorxy1) {
+            this.handler = handler1;
+            this.shutterCallback = shutterCallback1;
+            this.cameraPorxy = cameraPorxy1;
+        }
+
+        @Override
+        public void onShutter() {
+            if (shutterCallback == null || cameraPorxy == null) {
+                Log.e(TAG, "ShutterCallbackForward:shutterCallback or cameraPorxy is null that can not talepicture");
+                return;
+            }
+            shutterCallback.onShutter(cameraPorxy);
+        }
+    }
+
+    public class PictureCallbackForward implements Camera.PictureCallback {
+
+        private Handler handler;
+        private CameraPictureCallback cameraPictureCallback;
+        private CameraPorxy cameraPorxy;
+
+        public PictureCallbackForward(Handler handler1, CameraPictureCallback cameraPictureCallback1, CameraPorxy cameraPorxy1) {
+            this.handler = handler1;
+            this.cameraPictureCallback = cameraPictureCallback1;
+            this.cameraPorxy = cameraPorxy1;
+        }
+
+
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            if (cameraPictureCallback == null || cameraPorxy == null) {
+                Log.e(TAG, "PictureCallbackForward：cameraPictureCallback or cameraPorxy is null that can not talepicture");
+                return;
+            }
+            cameraPictureCallback.onPictureTaken(data, cameraPorxy);
+
+        }
+    }
+
+
 }

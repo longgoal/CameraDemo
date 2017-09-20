@@ -43,5 +43,22 @@ public interface CameraManager {
 
         public void setDisplayOrientation(int rotation);
 
+        public void takePicture(CameraShutterCallback shutterCallback, CameraPictureCallback rawCallback, CameraPictureCallback postviewCallback, CameraPictureCallback jpegCallback);
     }
+
+    /**
+     * Camera a serias of Callback
+     */
+    public interface CameraPictureCallback {
+
+        public int onPictureTaken(byte[] data, CameraPorxy cameraProxy);
+    }
+
+    public interface CameraShutterCallback {
+
+        public void onShutter(CameraPorxy cameraPorxy);
+
+        public void onShutter();
+    }
+
 }
