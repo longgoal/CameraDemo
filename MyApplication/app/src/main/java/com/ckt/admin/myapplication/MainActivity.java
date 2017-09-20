@@ -4,16 +4,14 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Canvas;
+
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
-import android.provider.Telephony;
+
 import android.support.annotation.RequiresApi;
-import android.support.media.ExifInterface;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,10 +19,13 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.ckt.admin.myapplication.Exif.Exif;
+import com.ckt.admin.myapplication.Exif.ExifInterface;
+import com.ckt.admin.myapplication.Exif.ExifTag;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
@@ -32,9 +33,11 @@ import com.ckt.admin.myapplication.manager.CameraParameters;
 import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
@@ -182,6 +185,32 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                         public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
                             cameraProxy.startPreview();
                             Toast.makeText(MainActivity.this, "拍照成功", Toast.LENGTH_SHORT).show();
+                            //读取exif信息
+                            // ExifInterface exifInterface = Exif.getExif(data);
+                            //List<ExifTag> tags = exifInterface.getAllTags();
+                            // Log.d(TAG, "liang.chen");
+                            //for (int i = 0; i < 5; i++) {
+                            //    ExifTag exif = tags.get(i);
+                            //    Log.d(TAG, "liang.chen:exif:tagID" + exif.getTagId() + "  tag:ValuesString" + exif.getValueAsString());
+                            // }
+                            // Log.d(TAG, "liang.chen:width:exifInterface orientation:" + Exif.getOrientation(data));
+                            File file = new File("/sdcard/main.jpeg");
+//建立输出字节流
+                            FileOutputStream fos = null;
+                            try {
+                                fos = new FileOutputStream(file);
+                                //用FileOutputStream 的write方法写入字节数组
+                                fos.write(data);
+                                System.out.println("写入成功");
+//为了节省IO流的开销，需要关闭
+                                fos.close();
+                            } catch (FileNotFoundException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+
                             return 0;
                         }
                     });
