@@ -34,6 +34,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".util.PermissionsActivity"></activity>
+
+        <service
+            android:name=".util.FileSaveServices"
+            android:enabled="true"></service>
     </application>
 
 </manifest>

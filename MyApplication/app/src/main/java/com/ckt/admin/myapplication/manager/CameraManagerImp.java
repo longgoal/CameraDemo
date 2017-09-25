@@ -133,7 +133,7 @@ public class CameraManagerImp implements CameraManager {
             PictureCallbackForward pictureCallbackForwardPostView = new PictureCallbackForward(null, postviewCallback, this);
             PictureCallbackForward pictureCallbackForwardJpeg = new PictureCallbackForward(null, jpegCallback, this);
             camera.takePicture(shutterCallbackForward, pictureCallbackForwardrRaw, pictureCallbackForwardPostView, pictureCallbackForwardJpeg);
-            Log.d(TAG,"Picture OK");
+            Log.d(TAG, "Picture OK");
         }
 
     }

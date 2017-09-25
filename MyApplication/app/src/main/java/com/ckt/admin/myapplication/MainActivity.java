@@ -1,13 +1,18 @@
 package com.ckt.admin.myapplication;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import android.hardware.Camera;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 
@@ -31,13 +36,9 @@ import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
 import com.ckt.admin.myapplication.manager.CameraParameters;
 import com.ckt.admin.myapplication.util.CameraSettings;
+import com.ckt.admin.myapplication.util.CameraUtil;
+import com.ckt.admin.myapplication.util.FileSaveServices;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
     private Handler CameraCmdHnadler;
+    public FileSaveServices mFileSaveServices;
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -76,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     private void init() {
+        //init view and data
         mTextView = (TextView) findViewById(R.id.tv);
         mImageButton = (ImageButton) findViewById(R.id.btn_shutter);
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
@@ -84,6 +88,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mSurfaceHolder.addCallback(this);
         mCameraManager = new CameraManagerImp();
         CameraCmdHnadler = new CameraHandler();
+
+        //init some service
+        Intent i = new Intent(MainActivity.this, FileSaveServices.class);
+        bindService(i, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     /**
@@ -161,6 +169,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
     }
 
+    public ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            Log.e(TAG, "liang.chen onServiceConnected");
+            CameraUtil.checkCameraFolder();
+            CameraUtil.checkDebugFolder();
+            FileSaveServices.MyBinder myBinder = (FileSaveServices.MyBinder) iBinder;
+            mFileSaveServices = myBinder.getService();
+
+            //mFileSaveServices.testMethod1();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            Log.d(TAG, "FileSaveServices disconnected");
+        }
+    };
+
     public class CameraHandler extends Handler {
 
         @Override
@@ -184,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                         @Override
                         public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
                             cameraProxy.startPreview();
+                            Log.d(TAG, "liang.chen takepicture");
                             Toast.makeText(MainActivity.this, "拍照成功", Toast.LENGTH_SHORT).show();
                             //读取exif信息
                             // ExifInterface exifInterface = Exif.getExif(data);
@@ -194,28 +221,51 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             //    Log.d(TAG, "liang.chen:exif:tagID" + exif.getTagId() + "  tag:ValuesString" + exif.getValueAsString());
                             // }
                             // Log.d(TAG, "liang.chen:width:exifInterface orientation:" + Exif.getOrientation(data));
+                            /*
                             File file = new File("/sdcard/main.jpeg");
-//建立输出字节流
+                            //建立输出字节流
                             FileOutputStream fos = null;
                             try {
                                 fos = new FileOutputStream(file);
                                 //用FileOutputStream 的write方法写入字节数组
                                 fos.write(data);
                                 System.out.println("写入成功");
-//为了节省IO流的开销，需要关闭
+                            //为了节省IO流的开销，需要关闭
                                 fos.close();
                             } catch (FileNotFoundException e) {
                                 e.printStackTrace();
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-
-
+                            */
+                            /*
+                            String dataDirectoryStr = Environment.getDataDirectory().toString();
+                            String storageStr = Environment.getExternalStorageState().toString();
+                            String dcimStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
+                            String alarmsStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS).toString();
+                            String pictureStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
+                            mTextView.setText("dataDirectoryStr->" + dataDirectoryStr + "\n" +
+                                    "dcimStr->" + dcimStr + "\n" +
+                                    "storageStr->" + storageStr + "\n" +
+                                    "alarmsStr->" + alarmsStr + "\n" +
+                                    "pictureStr->" + pictureStr
+                            );
+                            */
+                            Camera.Size size = cameraProxy.getCameraParameters().getPictureSize();
+                            int picWidht = size.width;
+                            int picHeight = size.height;
+                            long currentTime = System.currentTimeMillis();
+                            FileSaveServices.OnImageSaveListener imageSaveListener = new FileSaveServices.OnImageSaveListener() {
+                                @Override
+                                public void onImageSaveFinish() {
+                                    Log.d(TAG, "liang.chen save jpeg complete");
+                                }
+                            };
+                            mFileSaveServices.saveImageofJpeg(data, String.valueOf(currentTime), currentTime, picWidht, picHeight, null, imageSaveListener, null, null);
                             return 0;
                         }
                     });
                     break;
-
                 default:
                     //nothing to do
                     break;
@@ -223,5 +273,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(serviceConnection);
     }
 }
