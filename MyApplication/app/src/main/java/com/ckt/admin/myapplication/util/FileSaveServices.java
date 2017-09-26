@@ -28,10 +28,6 @@ public class FileSaveServices extends Service {
         return myBinder;
     }
 
-    public void testMethod1() {
-        Log.e("FileSaveServices", "liang.chen testMethod1()");
-    }
-
     public class MyBinder extends Binder {
 
         public FileSaveServices getService() {
@@ -41,9 +37,9 @@ public class FileSaveServices extends Service {
 
     private MyBinder myBinder = new MyBinder();
 
-    public void saveImageofJpeg(byte[] imgDatas, String title, long data, int width, int height,
+    public void saveImageofJpeg(byte[] imgDatas, String title, long date, int width, int height,
                                 String format, OnImageSaveListener listener, ContentResolver contentResolver, ExifInterface exifInterface) {
-        SaveAsyncTask saveAsyncTask = new SaveAsyncTask(imgDatas, title, data, width, height, format, listener, contentResolver, exifInterface);
+        SaveAsyncTask saveAsyncTask = new SaveAsyncTask(imgDatas, title, date, width, height, format, listener, contentResolver, exifInterface);
         saveAsyncTask.execute();
     }
 
@@ -72,7 +68,6 @@ public class FileSaveServices extends Service {
             this.mExifInterface = exifInterface;
         }
 
-
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -82,11 +77,8 @@ public class FileSaveServices extends Service {
         @Override
         protected Uri doInBackground(Void... voids) {
             Log.d(TAG, "progressing to save jpeg image");
-            //mTitle = mTitle + ".jpeg";
-            String fileName = Storage.getImageFilePath(mTitle);
-            //if (mFormat.contains("jpeg")) {
+            String fileName = Storage.getImageFilePath(mTitle, mFormat);
             Storage.writeJpeg(fileName, mImgDatas, null);
-            // }
             //还未将相关信息添加到数据库里
             return null;
         }
@@ -95,8 +87,6 @@ public class FileSaveServices extends Service {
         protected void onPostExecute(Uri uri) {
             super.onPostExecute(uri);
             mListener.onImageSaveFinish();
-            Log.d(TAG, "liang.chen save img end");
-
         }
     }
 

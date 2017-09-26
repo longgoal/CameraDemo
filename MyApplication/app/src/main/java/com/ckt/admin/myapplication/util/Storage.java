@@ -26,13 +26,13 @@ public class Storage {
     public static final String RAW_DIRECTORY = DCIM + "/Camera/raw";
     public static final String DEBUG_DIRECTORY = DCIM + "/Debug";
 
-    public static String getImageFilePath(String title) {
-        if (title.contains("yuv")) {
+    public static String getImageFilePath(String title, String format) {
+        if (format.contains(".yuv")) {
             return DIRECTORY + "/" + title + ".yuv";
-        } else if (title.contains("jpeg")) {
+        } else if (format.contains(".jpeg")) {
             return DIRECTORY + "/" + title + ".jpeg";
         }
-        return DIRECTORY + "/" + title + ".jpeg";
+        return null;
     }
 
     /**
@@ -47,7 +47,6 @@ public class Storage {
                 e.printStackTrace();
             }
         }
-        Log.d(TAG, "liang.chen writeJpeg->fileParh:" + filePath);
         writeFile(filePath, data);
         return data.length;
     }

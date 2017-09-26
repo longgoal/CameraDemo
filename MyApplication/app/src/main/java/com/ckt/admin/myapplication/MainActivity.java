@@ -9,17 +9,19 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import android.hardware.Camera;
+import android.hardware.SensorManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 
 import android.support.annotation.RequiresApi;
+import android.support.annotation.Size;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -27,10 +29,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
-import com.ckt.admin.myapplication.Exif.ExifTag;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
@@ -39,6 +39,8 @@ import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.CameraUtil;
 import com.ckt.admin.myapplication.util.FileSaveServices;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
@@ -62,7 +64,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private SurfaceHolder mSurfaceHolder;
     private Handler CameraCmdHnadler;
     public FileSaveServices mFileSaveServices;
+    private FileSaveServices.OnImageSaveListener imageSaveListener;
+    private int mPhoneOrientation;
 
+    private OrientationEventListener mPhoneOrientataionEventListener;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -92,6 +97,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //init some service
         Intent i = new Intent(MainActivity.this, FileSaveServices.class);
         bindService(i, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        mPhoneOrientataionEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int i) {
+                mPhoneOrientation = i;
+            }
+        };
     }
 
     /**
@@ -105,7 +117,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @RequiresApi(api = Build.VERSION_CODES.M)
     private boolean checkPermissions() {
         boolean requestPermission = false;
-
         if (checkSelfPermission(Manifest.permission.CAMERA) ==
                 PackageManager.PERMISSION_GRANTED &&
                 checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
@@ -137,9 +148,19 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         Log.d(TAG, "surfaceCreated");
         mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
         mParamters = mCameraProxyImp.getCameraParameters();
-
+        /*
+        List<Camera.Size> list = mParamters.getSupportedPictureSizes();
+        for (int i = 0; i < list.size(); i++) {
+            Camera.Size s = list.get(i);
+            Log.e(TAG, "liang.chen Size Width:" + s.width + "  Height:" + s.height);
+        }
+        */
+        // TODO: will can be set
+        mParamters.setPictureSize(4160, 3120);
+        mParamters.setRotation(0);
         mCameraProxyImp.setCameraParameters(mParamters);
         mCameraProxyImp.setSurfaceHolder(surfaceHolder);
+
         //调整输出预览数据的方向
         mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
         mCameraProxyImp.startPreview();
@@ -162,6 +183,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         switch (view.getId()) {
             case R.id.btn_shutter:
                 CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
+                imageSaveListener = new FileSaveServices.OnImageSaveListener() {
+                    @Override
+                    public void onImageSaveFinish() {
+                        Toast.makeText(MainActivity.this, getResources().getString(R.string.save_complete), Toast.LENGTH_SHORT).show();
+                    }
+                };
                 break;
             default:
                 //nothing to do
@@ -177,8 +204,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             CameraUtil.checkDebugFolder();
             FileSaveServices.MyBinder myBinder = (FileSaveServices.MyBinder) iBinder;
             mFileSaveServices = myBinder.getService();
-
-            //mFileSaveServices.testMethod1();
         }
 
         @Override
@@ -206,62 +231,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case TAKE_PICTURE:
+                    Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+                    Camera.getCameraInfo(0, cameraInfo);
+                    int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
+                    mParamters.setRotation(cameraJpegRotation);
+                    upCameraParameters(mParamters);
                     mCameraProxyImp.takePicture(null, null, null, new CameraManager.CameraPictureCallback() {
                         @Override
                         public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
                             cameraProxy.startPreview();
-                            Log.d(TAG, "liang.chen takepicture");
-                            Toast.makeText(MainActivity.this, "拍照成功", Toast.LENGTH_SHORT).show();
-                            //读取exif信息
-                            // ExifInterface exifInterface = Exif.getExif(data);
-                            //List<ExifTag> tags = exifInterface.getAllTags();
-                            // Log.d(TAG, "liang.chen");
-                            //for (int i = 0; i < 5; i++) {
-                            //    ExifTag exif = tags.get(i);
-                            //    Log.d(TAG, "liang.chen:exif:tagID" + exif.getTagId() + "  tag:ValuesString" + exif.getValueAsString());
-                            // }
-                            // Log.d(TAG, "liang.chen:width:exifInterface orientation:" + Exif.getOrientation(data));
-                            /*
-                            File file = new File("/sdcard/main.jpeg");
-                            //建立输出字节流
-                            FileOutputStream fos = null;
-                            try {
-                                fos = new FileOutputStream(file);
-                                //用FileOutputStream 的write方法写入字节数组
-                                fos.write(data);
-                                System.out.println("写入成功");
-                            //为了节省IO流的开销，需要关闭
-                                fos.close();
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            */
-                            /*
-                            String dataDirectoryStr = Environment.getDataDirectory().toString();
-                            String storageStr = Environment.getExternalStorageState().toString();
-                            String dcimStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).toString();
-                            String alarmsStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_ALARMS).toString();
-                            String pictureStr = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).toString();
-                            mTextView.setText("dataDirectoryStr->" + dataDirectoryStr + "\n" +
-                                    "dcimStr->" + dcimStr + "\n" +
-                                    "storageStr->" + storageStr + "\n" +
-                                    "alarmsStr->" + alarmsStr + "\n" +
-                                    "pictureStr->" + pictureStr
-                            );
-                            */
                             Camera.Size size = cameraProxy.getCameraParameters().getPictureSize();
-                            int picWidht = size.width;
+                            final ExifInterface exif = Exif.getExif(data);
+                            //exif de width height
+                            Integer exifWidth = exif.getTagIntValue(ExifInterface.TAG_PIXEL_X_DIMENSION);
+                            Integer exifHeight = exif.getTagIntValue(ExifInterface.TAG_PIXEL_Y_DIMENSION);
+                            int picWidth = size.width;
                             int picHeight = size.height;
                             long currentTime = System.currentTimeMillis();
-                            FileSaveServices.OnImageSaveListener imageSaveListener = new FileSaveServices.OnImageSaveListener() {
-                                @Override
-                                public void onImageSaveFinish() {
-                                    Log.d(TAG, "liang.chen save jpeg complete");
-                                }
-                            };
-                            mFileSaveServices.saveImageofJpeg(data, String.valueOf(currentTime), currentTime, picWidht, picHeight, null, imageSaveListener, null, null);
+                            mFileSaveServices.saveImageofJpeg(data, String.valueOf(currentTime), currentTime, picWidth, picHeight, ".jpeg", imageSaveListener, null, null);
                             return 0;
                         }
                     });
@@ -269,15 +256,30 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 default:
                     //nothing to do
                     break;
-
-
             }
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mPhoneOrientataionEventListener.enable();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mPhoneOrientataionEventListener.disable();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(serviceConnection);
+        mPhoneOrientataionEventListener.disable();
+    }
+
+    public void upCameraParameters(Camera.Parameters p) {
+        mCameraProxyImp.setCameraParameters(p);
     }
 }

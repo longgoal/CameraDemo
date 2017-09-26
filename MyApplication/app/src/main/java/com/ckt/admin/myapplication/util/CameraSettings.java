@@ -6,10 +6,6 @@ package com.ckt.admin.myapplication.util;
 
 public class CameraSettings {
 
-
     public static final String KEY_REQUEST_PERMISSION  = "request_permission";
-
-
-
 
 }

@@ -57,10 +57,7 @@ public class CameraManagerImp implements CameraManager {
      * camera proxy impl
      */
     public class CameraProxyImpl implements CameraPorxy {
-
         Camera camera;
-
-
         public CameraProxyImpl() {
 
         }
@@ -172,7 +169,6 @@ public class CameraManagerImp implements CameraManager {
             this.cameraPorxy = cameraPorxy1;
         }
 
-
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             if (cameraPictureCallback == null || cameraPorxy == null) {
@@ -180,9 +176,6 @@ public class CameraManagerImp implements CameraManager {
                 return;
             }
             cameraPictureCallback.onPictureTaken(data, cameraPorxy);
-
         }
     }
-
-
 }
