@@ -1,8 +1,12 @@
 package com.ckt.admin.myapplication.util;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
-
 import com.ckt.admin.myapplication.Exif.ExifInterface;
 
 import java.io.File;
@@ -74,5 +78,50 @@ public class Storage {
         }
     }
 
+    public static Uri saveImageInfo(ContentResolver resolver, String title, String filePath, long date, int width, int height, long dataLength,
+                                    String format) {
+        Uri uri = null;
+        if (resolver == null) {
+            Log.e(TAG, "liang.chen saveImageinfo resolver is null");
+            return null;
+        }
+        ContentValues c = getImageContentValues(title, filePath, date, width, height, dataLength, format);
+        try {
+            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, c);
+        } catch (Throwable throwable) {
+            Log.e(TAG, "saveImageInfo save imageinfo into sqlite error");
+        }
+        return uri;
+    }
 
+    //get image contentvalue
+    public static ContentValues getImageContentValues(String title, String filePath, long date, int width, int height, long dataLength,
+                                                      String format) {
+        Log.e(TAG, "liang.chen getImageContentValues->");
+        ContentValues contentValues = new ContentValues(8);
+        contentValues.put(MediaStore.Images.ImageColumns.TITLE, title);
+        contentValues.put(MediaStore.Images.ImageColumns.DATA, filePath);
+        contentValues.put(MediaStore.Images.ImageColumns.DATE_TAKEN, date);
+        contentValues.put(MediaStore.Images.ImageColumns.WIDTH, width);
+        contentValues.put(MediaStore.Images.ImageColumns.HEIGHT, height);
+        contentValues.put(MediaStore.Images.ImageColumns.SIZE, dataLength);
+        contentValues.put(MediaStore.Images.ImageColumns.MIME_TYPE, "image/jpeg");
+        contentValues.put(MediaStore.Images.ImageColumns.DISPLAY_NAME, title + ".jpeg");
+        return contentValues;
+    }
+
+    public static boolean isImageExis(String fileName, ContentResolver resolver) {
+        if (fileName.equals("") || resolver == null) {
+            return false;
+        }
+        String[] project = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA, MediaStore.Images.Media.SIZE};
+        Cursor cursor = resolver.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, project, null, null, null);
+        String tempFileName;
+        while (cursor.moveToNext()) {
+            Log.e(TAG, "liang.chen isImageExis->id: " + cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)) + "/n" +
+                    "  data: " + cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA)) + " /n" +
+                    " size: " + cursor.getInt(cursor.getColumnIndex(MediaStore.Images.Media.SIZE)));
+        }
+        return true;
+    }
 }

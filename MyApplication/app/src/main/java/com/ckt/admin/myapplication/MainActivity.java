@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 
 import android.hardware.Camera;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -17,7 +18,6 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 
 import android.support.annotation.RequiresApi;
-import android.support.annotation.Size;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,7 +27,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
@@ -39,8 +38,6 @@ import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.CameraUtil;
 import com.ckt.admin.myapplication.util.FileSaveServices;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
-
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
@@ -148,19 +145,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         Log.d(TAG, "surfaceCreated");
         mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
         mParamters = mCameraProxyImp.getCameraParameters();
-        /*
-        List<Camera.Size> list = mParamters.getSupportedPictureSizes();
-        for (int i = 0; i < list.size(); i++) {
-            Camera.Size s = list.get(i);
-            Log.e(TAG, "liang.chen Size Width:" + s.width + "  Height:" + s.height);
-        }
-        */
         // TODO: will can be set
         mParamters.setPictureSize(4160, 3120);
         mParamters.setRotation(0);
         mCameraProxyImp.setCameraParameters(mParamters);
         mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-
         //调整输出预览数据的方向
         mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
         mCameraProxyImp.startPreview();
@@ -185,8 +174,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
                 imageSaveListener = new FileSaveServices.OnImageSaveListener() {
                     @Override
-                    public void onImageSaveFinish() {
-                        Toast.makeText(MainActivity.this, getResources().getString(R.string.save_complete), Toast.LENGTH_SHORT).show();
+                    public void onImageSaveFinish(Uri uri) {
+                        Log.e(TAG, "liang.chen onImageSaveFinish uri->" + uri);
+                        Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+                        sendBroadcast(i);
+                        mImageButton.setEnabled(false);
                     }
                 };
                 break;
@@ -231,11 +223,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case TAKE_PICTURE:
+                    mImageButton.setEnabled(false);
                     Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                     Camera.getCameraInfo(0, cameraInfo);
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
                     upCameraParameters(mParamters);
+                    /*ce shi  media Store*/
                     mCameraProxyImp.takePicture(null, null, null, new CameraManager.CameraPictureCallback() {
                         @Override
                         public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
@@ -248,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             int picWidth = size.width;
                             int picHeight = size.height;
                             long currentTime = System.currentTimeMillis();
-                            mFileSaveServices.saveImageofJpeg(data, String.valueOf(currentTime), currentTime, picWidth, picHeight, ".jpeg", imageSaveListener, null, null);
+                            mFileSaveServices.saveImageofJpeg(data, String.valueOf(currentTime), currentTime, picWidth, picHeight, data.length, ".jpeg", imageSaveListener, MainActivity.this.getContentResolver(), null);
                             return 0;
                         }
                     });

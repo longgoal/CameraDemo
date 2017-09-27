@@ -37,35 +37,37 @@ public class FileSaveServices extends Service {
 
     private MyBinder myBinder = new MyBinder();
 
-    public void saveImageofJpeg(byte[] imgDatas, String title, long date, int width, int height,
+    public void saveImageofJpeg(byte[] imgDatas, String title, long date, int width, int height, long dataLength,
                                 String format, OnImageSaveListener listener, ContentResolver contentResolver, ExifInterface exifInterface) {
-        SaveAsyncTask saveAsyncTask = new SaveAsyncTask(imgDatas, title, date, width, height, format, listener, contentResolver, exifInterface);
+        SaveAsyncTask saveAsyncTask = new SaveAsyncTask(imgDatas, title, date, width, height, dataLength, format, listener, contentResolver, exifInterface);
         saveAsyncTask.execute();
     }
 
     public class SaveAsyncTask extends AsyncTask<Void, Void, Uri> {
         private byte[] mImgDatas;
         private String mTitle;
-        private long mData;
+        private long mDate;
         private int mWidth;
         private int mHeight;
         private String mFormat;
+        private long mDataLength;
         private OnImageSaveListener mListener;
         private ContentResolver mContentResolver;
         private ExifInterface mExifInterface;
 
-        public SaveAsyncTask(byte[] imgDatas, String title, long data, int width, int height,
+        public SaveAsyncTask(byte[] imgDatas, String title, long data, int width, int height, long dataLength,
                              String format, OnImageSaveListener listener, ContentResolver contentResolver, ExifInterface exifInterface) {
 
             this.mImgDatas = imgDatas;
             this.mTitle = title;
-            this.mData = data;
+            this.mDate = data;
             this.mWidth = width;
             this.mHeight = height;
             this.mFormat = format;
             this.mListener = listener;
             this.mContentResolver = contentResolver;
             this.mExifInterface = exifInterface;
+            this.mDataLength = dataLength;
         }
 
         @Override
@@ -79,19 +81,19 @@ public class FileSaveServices extends Service {
             Log.d(TAG, "progressing to save jpeg image");
             String fileName = Storage.getImageFilePath(mTitle, mFormat);
             Storage.writeJpeg(fileName, mImgDatas, null);
-            //还未将相关信息添加到数据库里
-            return null;
+            Uri uri = Storage.saveImageInfo(mContentResolver, mTitle, fileName, mDate, mWidth, mHeight, mDataLength, "");
+            return uri;
         }
 
         @Override
         protected void onPostExecute(Uri uri) {
             super.onPostExecute(uri);
-            mListener.onImageSaveFinish();
+            mListener.onImageSaveFinish(uri);
         }
     }
 
     public interface OnImageSaveListener {
-        public void onImageSaveFinish();
+        public void onImageSaveFinish(Uri uri);
     }
 
 }
