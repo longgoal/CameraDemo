@@ -25,11 +25,14 @@ import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
+import com.ckt.admin.myapplication.customview.BottomBarView;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private TextView mTextView;
     private ImageButton mImageButton;
     private SurfaceView mSurfaceView;
+    private BottomBarView mBottonBarView;
 
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
@@ -63,8 +67,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public FileSaveServices mFileSaveServices;
     private FileSaveServices.OnImageSaveListener imageSaveListener;
     private int mPhoneOrientation;
-
+    private boolean isBindService = false;
     private OrientationEventListener mPhoneOrientataionEventListener;
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -75,7 +80,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             finish();
             return;
         }
+        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+        getSupportActionBar().hide();
         Log.d(TAG, "liang.chen init");
         init();
     }
@@ -83,14 +94,40 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void init() {
         //init view and data
         mTextView = (TextView) findViewById(R.id.tv);
-        mImageButton = (ImageButton) findViewById(R.id.btn_shutter);
+        //mImageButton = (ImageButton) findViewById(R.id.btn_shutter);
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
-        mImageButton.setOnClickListener(this);
+        mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
+        // mImageButton.setOnClickListener(this);
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mCameraManager = new CameraManagerImp();
         CameraCmdHnadler = new CameraHandler();
 
+        mBottonBarView.setBottonBarViewListener(new BottomBarView.BottonBarViewListener() {
+            @Override
+            public void onThumbnailClickListener() {
+                Log.e(TAG, "liang.chen onThumbnailClickListener");
+            }
+
+            @Override
+            public void onShutterClickListener() {
+                Log.e(TAG, "liang.chen onShutterClickListener");
+                CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
+                imageSaveListener = new FileSaveServices.OnImageSaveListener() {
+                    @Override
+                    public void onImageSaveFinish(Uri uri) {
+                        Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+                        sendBroadcast(i);
+                        mImageButton.setEnabled(true);
+                    }
+                };
+            }
+
+            @Override
+            public void onSettingClickListener() {
+                Log.e(TAG, "liang.chen onSettingClickListener");
+            }
+        });
         //init some service
         Intent i = new Intent(MainActivity.this, FileSaveServices.class);
         bindService(i, serviceConnection, Context.BIND_AUTO_CREATE);
@@ -143,45 +180,41 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         Log.d(TAG, "surfaceCreated");
-        mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
-        mParamters = mCameraProxyImp.getCameraParameters();
-        // TODO: will can be set
-        mParamters.setPictureSize(4160, 3120);
-        mParamters.setRotation(0);
-        mCameraProxyImp.setCameraParameters(mParamters);
-        mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-        //调整输出预览数据的方向
-        mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
-        mCameraProxyImp.startPreview();
+
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
         Log.d(TAG, "surfaceChanged");
+        Message msg = CameraCmdHnadler.obtainMessage();
+        msg.what = START_PREVIEW;
+        msg.obj = surfaceHolder;
+        CameraCmdHnadler.sendMessage(msg);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         Log.d(TAG, "surfaceDestroyed");
-        mCameraProxyImp.stopPreview();
-        mCameraProxyImp.release();
+        CameraCmdHnadler.sendEmptyMessage(STOP_PREVIEW);
+        CameraCmdHnadler.sendEmptyMessage(RELEASE);
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            /*
             case R.id.btn_shutter:
                 CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
                 imageSaveListener = new FileSaveServices.OnImageSaveListener() {
                     @Override
                     public void onImageSaveFinish(Uri uri) {
-                        Log.e(TAG, "liang.chen onImageSaveFinish uri->" + uri);
                         Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
                         sendBroadcast(i);
-                        mImageButton.setEnabled(false);
+                        mImageButton.setEnabled(true);
                     }
                 };
                 break;
+            */
             default:
                 //nothing to do
                 break;
@@ -196,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             CameraUtil.checkDebugFolder();
             FileSaveServices.MyBinder myBinder = (FileSaveServices.MyBinder) iBinder;
             mFileSaveServices = myBinder.getService();
+            isBindService = true;
         }
 
         @Override
@@ -214,12 +248,29 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case START_PREVIEW:
+                    SurfaceHolder surfaceHolder = (SurfaceHolder) msg.obj;
+                    mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
+                    mParamters = mCameraProxyImp.getCameraParameters();
+                    // TODO: will can be set
+                    mParamters.setPictureSize(4160, 3120);
+                    mParamters.setRotation(0);
+                    mCameraProxyImp.setCameraParameters(mParamters);
+                    mCameraProxyImp.setSurfaceHolder(surfaceHolder);
+                    //调整输出预览数据的方向
+                    mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
+                    mCameraProxyImp.startPreview();
                     break;
 
                 case STOP_PREVIEW:
+                    if (mCameraProxyImp != null) {
+                        mCameraProxyImp.stopPreview();
+                    }
                     break;
 
                 case RELEASE:
+                    if (mCameraProxyImp != null) {
+                        mCameraProxyImp.release();
+                    }
                     break;
 
                 case TAKE_PICTURE:
@@ -269,8 +320,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(serviceConnection);
-        mPhoneOrientataionEventListener.disable();
+        if (isBindService) {
+            unbindService(serviceConnection);
+            isBindService = false;
+        }
+        if (mPhoneOrientataionEventListener != null) {
+            mPhoneOrientataionEventListener.disable();
+        }
     }
 
     public void upCameraParameters(Camera.Parameters p) {

@@ -13,7 +13,7 @@
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" />
-
+    <!--
     <ImageButton
         android:id="@+id/btn_shutter"
         android:layout_width="wrap_content"
@@ -21,6 +21,8 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:src="@mipmap/ic_launcher" />
+    -->
+
 
     <TextView
         android:id="@+id/tv"
@@ -29,4 +31,11 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:textColor="#DC143C" />
+
+    <com.ckt.admin.myapplication.customview.BottomBarView
+        android:id="@+id/bottonbar"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true" />
 </RelativeLayout>
