@@ -1,6 +1,7 @@
 package com.ckt.admin.myapplication.customview;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -20,7 +21,7 @@ import com.ckt.admin.myapplication.R;
 public class BottomBarView extends FrameLayout implements View.OnClickListener {
     private String TAG = "BottomControlView";
 
-    private CircleImageView thumnaiBtn;
+    private CircleImageView thumnbaiBtn;
     private ImageButton shutterBtn;
     private ImageView settingBtn;
     private BottonBarViewListener mBottonBarViewListener;
@@ -41,8 +42,8 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
 
     private void initView(Context context) {
         LayoutInflater.from(context).inflate(R.layout.bottom_bar_wapper, this, true);
-        thumnaiBtn = (CircleImageView) findViewById(R.id.thumbnail_preview);
-        thumnaiBtn.setOnClickListener(this);
+        thumnbaiBtn = (CircleImageView) findViewById(R.id.thumbnail_preview);
+        thumnbaiBtn.setOnClickListener(this);
         shutterBtn = (ImageButton) findViewById(R.id.shutter_button);
         shutterBtn.setOnClickListener(this);
         settingBtn = (ImageView) findViewById(R.id.app_settings_button);
@@ -92,8 +93,19 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
             default:
                 //nothing
                 break;
-
         }
+    }
+
+    public void setShutterBtnEnable(boolean state) {
+        shutterBtn.setEnabled(state);
+    }
+
+    public void setThumnaiBtnEnable(boolean state) {
+        thumnbaiBtn.setEnabled(state);
+    }
+
+    public void setSettingBtn(boolean state) {
+        settingBtn.setEnabled(state);
     }
 
     public interface BottonBarViewListener {
@@ -102,6 +114,10 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
         public void onShutterClickListener();
 
         public void onSettingClickListener();
+    }
+
+    public void upDataThumbnai(Bitmap bitmap) {
+        thumnbaiBtn.setImageBitmap(bitmap);
     }
 
 }

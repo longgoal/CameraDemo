@@ -8,8 +8,10 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
+import android.hardware.camera2.CameraAccessException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -27,8 +29,8 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
@@ -37,6 +39,7 @@ import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
 import com.ckt.admin.myapplication.manager.CameraParameters;
+import com.ckt.admin.myapplication.util.BitmapUtils;
 import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.CameraUtil;
 import com.ckt.admin.myapplication.util.FileSaveServices;
@@ -57,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private CameraPorxy mCameraProxyImp;
     private Camera.Parameters mParamters;
     private TextView mTextView;
-    private ImageButton mImageButton;
     private SurfaceView mSurfaceView;
     private BottomBarView mBottonBarView;
 
@@ -70,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private boolean isBindService = false;
     private OrientationEventListener mPhoneOrientataionEventListener;
 
-
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,8 +81,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             finish();
             return;
         }
-        //getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -116,9 +115,14 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 imageSaveListener = new FileSaveServices.OnImageSaveListener() {
                     @Override
                     public void onImageSaveFinish(Uri uri) {
+                        mBottonBarView.setShutterBtnEnable(true);
+                        mBottonBarView.setThumnaiBtnEnable(true);
                         Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
                         sendBroadcast(i);
-                        mImageButton.setEnabled(true);
+                        Toast.makeText(MainActivity.this, "拍照成功", Toast.LENGTH_SHORT).show();
+                        mBottonBarView.setShutterBtnEnable(true);
+                        Bitmap thumbnai = BitmapUtils.decodeThumbnail(CameraUtil.getRealFilePath(MainActivity.this, uri));
+                        mBottonBarView.upDataThumbnai(thumbnai);
                     }
                 };
             }
@@ -131,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //init some service
         Intent i = new Intent(MainActivity.this, FileSaveServices.class);
         bindService(i, serviceConnection, Context.BIND_AUTO_CREATE);
-
         mPhoneOrientataionEventListener = new OrientationEventListener(this, SensorManager.SENSOR_DELAY_NORMAL) {
             @Override
             public void onOrientationChanged(int i) {
@@ -202,19 +205,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            /*
-            case R.id.btn_shutter:
-                CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
-                imageSaveListener = new FileSaveServices.OnImageSaveListener() {
-                    @Override
-                    public void onImageSaveFinish(Uri uri) {
-                        Intent i = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
-                        sendBroadcast(i);
-                        mImageButton.setEnabled(true);
-                    }
-                };
-                break;
-            */
             default:
                 //nothing to do
                 break;
@@ -256,7 +246,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     mParamters.setRotation(0);
                     mCameraProxyImp.setCameraParameters(mParamters);
                     mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-                    //调整输出预览数据的方向
                     mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
                     mCameraProxyImp.startPreview();
                     break;
@@ -274,16 +263,17 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case TAKE_PICTURE:
-                    mImageButton.setEnabled(false);
                     Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                     Camera.getCameraInfo(0, cameraInfo);
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
                     upCameraParameters(mParamters);
-                    /*ce shi  media Store*/
+                    mBottonBarView.setShutterBtnEnable(false);
+                    mBottonBarView.setThumnaiBtnEnable(false);
                     mCameraProxyImp.takePicture(null, null, null, new CameraManager.CameraPictureCallback() {
                         @Override
                         public int onPictureTaken(byte[] data, CameraPorxy cameraProxy) {
+                            mBottonBarView.setShutterBtnEnable(false);
                             cameraProxy.startPreview();
                             Camera.Size size = cameraProxy.getCameraParameters().getPictureSize();
                             final ExifInterface exif = Exif.getExif(data);

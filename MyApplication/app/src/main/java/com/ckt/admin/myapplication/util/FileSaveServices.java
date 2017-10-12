@@ -95,5 +95,4 @@ public class FileSaveServices extends Service {
     public interface OnImageSaveListener {
         public void onImageSaveFinish(Uri uri);
     }
-
 }
