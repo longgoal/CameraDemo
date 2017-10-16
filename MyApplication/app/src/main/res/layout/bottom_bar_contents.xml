@@ -25,13 +25,13 @@
 
         <ImageButton
             android:id="@+id/shutter_button"
-            android:layout_width="@dimen/shutter_button_size"
-            android:layout_height="@dimen/shutter_button_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:clickable="true"
             android:focusable="true"
             android:scaleType="center"
-            android:src="@drawable/button_shutter" />
+            android:background="@drawable/button_shutter" />
     </FrameLayout>
 
     <FrameLayout

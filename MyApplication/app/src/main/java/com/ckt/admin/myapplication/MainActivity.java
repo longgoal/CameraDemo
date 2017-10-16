@@ -9,9 +9,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -23,12 +23,15 @@ import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,6 +42,7 @@ import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
 import com.ckt.admin.myapplication.manager.CameraParameters;
+import com.ckt.admin.myapplication.manager.FocusOverlayManager;
 import com.ckt.admin.myapplication.util.BitmapUtils;
 import com.ckt.admin.myapplication.util.CameraSettings;
 import com.ckt.admin.myapplication.util.CameraUtil;
@@ -62,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private TextView mTextView;
     private SurfaceView mSurfaceView;
     private BottomBarView mBottonBarView;
+    private ImageButton mImageButtonExtra;
+    private ImageButton mImageButtonSwitch;
 
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
@@ -71,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private int mPhoneOrientation;
     private boolean isBindService = false;
     private OrientationEventListener mPhoneOrientataionEventListener;
+    private Camera.AutoFocusCallback autoFocusCallback;
+    private FocusOverlayManager mFocusOverlayManager;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -93,15 +101,25 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void init() {
         //init view and data
         mTextView = (TextView) findViewById(R.id.tv);
-        //mImageButton = (ImageButton) findViewById(R.id.btn_shutter);
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
-        // mImageButton.setOnClickListener(this);
+        mImageButtonExtra = (ImageButton) findViewById(R.id.imgb_setting_extra);
+        mImageButtonSwitch = (ImageButton) findViewById(R.id.imgb_setting_switch);
+        mImageButtonSwitch.setOnClickListener(this);
+        mImageButtonExtra.setOnClickListener(this);
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mCameraManager = new CameraManagerImp();
         CameraCmdHnadler = new CameraHandler();
-
+        mFocusOverlayManager = new FocusOverlayManager(MainActivity.this);
+        autoFocusCallback = new Camera.AutoFocusCallback() {
+            @Override
+            public void onAutoFocus(boolean b, Camera camera) {
+                if (b) {
+                    Toast.makeText(MainActivity.this, "对焦成功", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
         mBottonBarView.setBottonBarViewListener(new BottomBarView.BottonBarViewListener() {
             @Override
             public void onThumbnailClickListener() {
@@ -205,6 +223,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
+            case R.id.imgb_setting_extra:
+
+                //Toast.makeText(MainActivity.this, "extra img", Toast.LENGTH_SHORT).show();
+
+                break;
+
+            case R.id.imgb_setting_switch:
+                Toast.makeText(MainActivity.this, "camera id switch", Toast.LENGTH_SHORT).show();
+                break;
             default:
                 //nothing to do
                 break;
@@ -321,5 +348,29 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     public void upCameraParameters(Camera.Parameters p) {
         mCameraProxyImp.setCameraParameters(p);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                Rect rect = new Rect(0, 0, CameraUtil.getWindowWidth(MainActivity.this), CameraUtil.getWindowHeigh(MainActivity.this));
+                mFocusOverlayManager.setmPreviewRect(rect);
+                mFocusOverlayManager.setmFocusAreas((int) event.getRawX(), (int) event.getRawY());
+                mFocusOverlayManager.setmMeteringArea((int) event.getRawX(), (int) event.getRawY());
+                Camera.Parameters parameters = mCameraProxyImp.getCameraParameters();
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                parameters.setFocusAreas(mFocusOverlayManager.getmFocusAreas());
+                parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
+                final int min = parameters.getMinExposureCompensation();
+                final int max = parameters.getMaxExposureCompensation();
+                Log.e(TAG, "liang.chen ->min:" + min + "  max:" + max);
+                parameters.setExposureCompensation(-12);
+                mCameraProxyImp.autoFocus(autoFocusCallback);
+            default:
+                break;
+        }
+        return super.onTouchEvent(event);
     }
 }

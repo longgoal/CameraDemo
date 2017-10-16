@@ -44,6 +44,9 @@ public interface CameraManager {
         public void setDisplayOrientation(int rotation);
 
         public void takePicture(CameraShutterCallback shutterCallback, CameraPictureCallback rawCallback, CameraPictureCallback postviewCallback, CameraPictureCallback jpegCallback);
+
+        public void autoFocus(Camera.AutoFocusCallback cb);
+
     }
 
     /**

@@ -21,7 +21,7 @@ import com.ckt.admin.myapplication.R;
 public class BottomBarView extends FrameLayout implements View.OnClickListener {
     private String TAG = "BottomControlView";
 
-    private CircleImageView thumnbaiBtn;
+    private CircleImageView thumnbnailBtn;
     private ImageButton shutterBtn;
     private ImageView settingBtn;
     private BottonBarViewListener mBottonBarViewListener;
@@ -42,8 +42,8 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
 
     private void initView(Context context) {
         LayoutInflater.from(context).inflate(R.layout.bottom_bar_wapper, this, true);
-        thumnbaiBtn = (CircleImageView) findViewById(R.id.thumbnail_preview);
-        thumnbaiBtn.setOnClickListener(this);
+        thumnbnailBtn = (CircleImageView) findViewById(R.id.thumbnail_preview);
+        thumnbnailBtn.setOnClickListener(this);
         shutterBtn = (ImageButton) findViewById(R.id.shutter_button);
         shutterBtn.setOnClickListener(this);
         settingBtn = (ImageView) findViewById(R.id.app_settings_button);
@@ -101,7 +101,7 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
     }
 
     public void setThumnaiBtnEnable(boolean state) {
-        thumnbaiBtn.setEnabled(state);
+        thumnbnailBtn.setEnabled(state);
     }
 
     public void setSettingBtn(boolean state) {
@@ -117,7 +117,7 @@ public class BottomBarView extends FrameLayout implements View.OnClickListener {
     }
 
     public void upDataThumbnai(Bitmap bitmap) {
-        thumnbaiBtn.setImageBitmap(bitmap);
+        thumnbnailBtn.setImageBitmap(bitmap);
     }
 
 }

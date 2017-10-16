@@ -3,11 +3,15 @@ package com.ckt.admin.myapplication.util;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.OrientationEventListener;
+import android.view.WindowManager;
 
 import java.io.File;
 import java.util.IllegalFormatCodePointException;
@@ -43,7 +47,7 @@ public class CameraUtil {
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 r = (cameraInfo.orientation - roration + 360) % 360;
             } else if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                r = (cameraInfo.orientation + roration ) % 360;
+                r = (cameraInfo.orientation + roration) % 360;
             }
         }
         return r;
@@ -61,27 +65,92 @@ public class CameraUtil {
         return 0;
     }
 
-    public static String getRealFilePath(final Context context, final Uri uri ) {
-        if ( null == uri ) return null;
+    public static String getRealFilePath(final Context context, final Uri uri) {
+        if (null == uri) return null;
         final String scheme = uri.getScheme();
         String data = null;
-        if ( scheme == null )
+        if (scheme == null)
             data = uri.getPath();
-        else if ( ContentResolver.SCHEME_FILE.equals( scheme ) ) {
+        else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
             data = uri.getPath();
-        } else if ( ContentResolver.SCHEME_CONTENT.equals( scheme ) ) {
-            Cursor cursor = context.getContentResolver().query( uri, new String[] { MediaStore.Images.ImageColumns.DATA }, null, null, null );
-            if ( null != cursor ) {
-                if ( cursor.moveToFirst() ) {
-                    int index = cursor.getColumnIndex( MediaStore.Images.ImageColumns.DATA );
-                    if ( index > -1 ) {
-                        data = cursor.getString( index );
+        } else if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
+            Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.Images.ImageColumns.DATA}, null, null, null);
+            if (null != cursor) {
+                if (cursor.moveToFirst()) {
+                    int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                    if (index > -1) {
+                        data = cursor.getString(index);
                     }
                 }
                 cursor.close();
             }
         }
         return data;
+    }
+
+    public static int getWindowWidth(Context context) {
+        // 获取屏幕分辨率
+        WindowManager wm = (WindowManager) (context
+                .getSystemService(Context.WINDOW_SERVICE));
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        int mScreenWidth = dm.widthPixels;
+        return mScreenWidth;
+    }
+
+    public static int getWindowHeigh(Context context) {
+        // 获取屏幕分辨率
+        WindowManager wm = (WindowManager) (context
+                .getSystemService(Context.WINDOW_SERVICE));
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        int mScreenHeigh = dm.heightPixels;
+        return mScreenHeigh;
+    }
+
+    /**
+     * Clamps x to between min and max (inclusive on both ends, x = min --> min,
+     * x = max --> max).
+     */
+    public static int clamp(int x, int min, int max) {
+        if (x > max) {
+            return max;
+        }
+        if (x < min) {
+            return min;
+        }
+        return x;
+    }
+
+    /**
+     * Clamps x to between min and max (inclusive on both ends, x = min --> min,
+     * x = max --> max).
+     */
+    public static float clamp(float x, float min, float max) {
+        if (x > max) {
+            return max;
+        }
+        if (x < min) {
+            return min;
+        }
+        return x;
+    }
+
+    public static Rect rectFToRect(RectF rectF) {
+        Rect rect = new Rect();
+        rectFToRect(rectF, rect);
+        return rect;
+    }
+
+    public static RectF rectToRectF(Rect r) {
+        return new RectF(r.left, r.top, r.right, r.bottom);
+    }
+
+    public static void rectFToRect(RectF rectF, Rect rect) {
+        rect.left = Math.round(rectF.left);
+        rect.top = Math.round(rectF.top);
+        rect.right = Math.round(rectF.right);
+        rect.bottom = Math.round(rectF.bottom);
     }
 
 }

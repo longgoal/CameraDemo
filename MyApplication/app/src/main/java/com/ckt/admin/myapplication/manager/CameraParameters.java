@@ -11,4 +11,6 @@ public interface CameraParameters {
     public static final int PREVIEW_ROTATION_180 = 180;
     public static final int PREVIEW_ROTATION_270 = 270;
 
+
+
 }

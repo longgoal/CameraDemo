@@ -58,6 +58,7 @@ public class CameraManagerImp implements CameraManager {
      */
     public class CameraProxyImpl implements CameraPorxy {
         Camera camera;
+
         public CameraProxyImpl() {
 
         }
@@ -131,6 +132,11 @@ public class CameraManagerImp implements CameraManager {
             PictureCallbackForward pictureCallbackForwardJpeg = new PictureCallbackForward(null, jpegCallback, this);
             camera.takePicture(shutterCallbackForward, pictureCallbackForwardrRaw, pictureCallbackForwardPostView, pictureCallbackForwardJpeg);
             Log.d(TAG, "Picture OK");
+        }
+
+        @Override
+        public void autoFocus(Camera.AutoFocusCallback cb) {
+            camera.autoFocus(cb);
         }
 
     }
