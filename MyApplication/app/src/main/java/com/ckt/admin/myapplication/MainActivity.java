@@ -147,7 +147,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             @Override
             public void onSettingClickListener() {
-                Log.e(TAG, "liang.chen onSettingClickListener");
+                Intent i = new Intent(MainActivity.this, SettingActivity.class);
+                startActivity(i);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_right);
             }
         });
         //init some service
@@ -230,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 break;
 
             case R.id.imgb_setting_switch:
-                Toast.makeText(MainActivity.this, "camera id switch", Toast.LENGTH_SHORT).show();
+
                 break;
             default:
                 //nothing to do
@@ -357,16 +359,19 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             case MotionEvent.ACTION_DOWN:
                 Rect rect = new Rect(0, 0, CameraUtil.getWindowWidth(MainActivity.this), CameraUtil.getWindowHeigh(MainActivity.this));
                 mFocusOverlayManager.setmPreviewRect(rect);
-                mFocusOverlayManager.setmFocusAreas((int) event.getRawX(), (int) event.getRawY());
-                mFocusOverlayManager.setmMeteringArea((int) event.getRawX(), (int) event.getRawY());
+                mFocusOverlayManager.setScreenWidth(CameraUtil.getWindowWidth(MainActivity.this));
+                mFocusOverlayManager.setScreenHeight(CameraUtil.getWindowHeigh(MainActivity.this));
+                mFocusOverlayManager.setmFocusAreas((int) event.getX(), (int) event.getY());
+                mFocusOverlayManager.setmMeteringArea((int) event.getX(), (int) event.getY());
                 Camera.Parameters parameters = mCameraProxyImp.getCameraParameters();
                 parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
                 parameters.setFocusAreas(mFocusOverlayManager.getmFocusAreas());
                 parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
                 final int min = parameters.getMinExposureCompensation();
                 final int max = parameters.getMaxExposureCompensation();
-                Log.e(TAG, "liang.chen ->min:" + min + "  max:" + max);
-                parameters.setExposureCompensation(-12);
+                // TODO: 2017/10/17 will add exposure Cpmpensation
+                parameters.setExposureCompensation(1);
+                mCameraProxyImp.setCameraParameters(parameters);
                 mCameraProxyImp.autoFocus(autoFocusCallback);
             default:
                 break;

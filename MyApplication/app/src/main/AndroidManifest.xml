@@ -33,11 +33,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".util.PermissionsActivity"></activity>
+        <activity android:name=".util.PermissionsActivity" />
 
         <service
             android:name=".util.FileSaveServices"
-            android:enabled="true"></service>
+            android:enabled="true" />
+
+        <activity android:name=".SettingActivity"></activity>
     </application>
 
 </manifest>
