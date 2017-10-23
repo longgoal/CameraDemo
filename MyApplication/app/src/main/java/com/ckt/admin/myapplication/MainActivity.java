@@ -31,7 +31,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageButton;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -369,7 +368,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
                 final int min = parameters.getMinExposureCompensation();
                 final int max = parameters.getMaxExposureCompensation();
-                // TODO: 2017/10/17 will add exposure Cpmpensation
+                // TODO: 2017/10/17 will add exposure Compensation
                 parameters.setExposureCompensation(1);
                 mCameraProxyImp.setCameraParameters(parameters);
                 mCameraProxyImp.autoFocus(autoFocusCallback);
