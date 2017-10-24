@@ -144,4 +144,16 @@ public class FocusOverlayManager {
         return mScreenHeight;
     }
 
+    public interface IFocusUiHander {
+
+        public void setPosition(int x,int y);
+
+        public void focusProcessing();
+
+        public void focusSuccess();
+
+        public void focusFaild();
+
+    }
+
 }

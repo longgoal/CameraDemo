@@ -14,6 +14,11 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true" />
 
+    <com.ckt.admin.myapplication.customview.FocusOverlay
+        android:id="@+id/focusiverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <ImageButton
         android:id="@+id/imgb_setting_extra"
         android:layout_width="wrap_content"
@@ -48,11 +53,5 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true" />
 
-    <com.ckt.admin.myapplication.customview.FocusOverlay
-        android:id="@+id/focusiverkay"
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true" />
 
 </RelativeLayout>

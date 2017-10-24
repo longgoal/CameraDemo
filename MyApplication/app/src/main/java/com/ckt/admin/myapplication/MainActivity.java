@@ -37,6 +37,7 @@ import android.widget.Toast;
 import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
 import com.ckt.admin.myapplication.customview.BottomBarView;
+import com.ckt.admin.myapplication.customview.FocusOverlay;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private BottomBarView mBottonBarView;
     private ImageButton mImageButtonExtra;
     private ImageButton mImageButtonSwitch;
+    private FocusOverlay mFocusOverlay;
 
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
@@ -104,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
         mImageButtonExtra = (ImageButton) findViewById(R.id.imgb_setting_extra);
         mImageButtonSwitch = (ImageButton) findViewById(R.id.imgb_setting_switch);
+        mFocusOverlay = (FocusOverlay) findViewById(R.id.focusiverlay);
         mImageButtonSwitch.setOnClickListener(this);
         mImageButtonExtra.setOnClickListener(this);
         mSurfaceHolder = mSurfaceView.getHolder();
@@ -115,7 +118,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onAutoFocus(boolean b, Camera camera) {
                 if (b) {
+                    mFocusOverlay.focusSuccess();
                     Toast.makeText(MainActivity.this, "对焦成功", Toast.LENGTH_SHORT).show();
+                } else {
+                    mFocusOverlay.focusFaild();
                 }
             }
         };
@@ -368,6 +374,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
                 final int min = parameters.getMinExposureCompensation();
                 final int max = parameters.getMaxExposureCompensation();
+                //focus ui start
+                mFocusOverlay.setPosition((int) event.getX(), (int) event.getY());
+
                 // TODO: 2017/10/17 will add exposure Compensation
                 parameters.setExposureCompensation(1);
                 mCameraProxyImp.setCameraParameters(parameters);
