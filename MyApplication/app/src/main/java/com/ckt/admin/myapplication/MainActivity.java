@@ -376,7 +376,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 final int max = parameters.getMaxExposureCompensation();
                 //focus ui start
                 mFocusOverlay.setPosition((int) event.getX(), (int) event.getY());
-
                 // TODO: 2017/10/17 will add exposure Compensation
                 parameters.setExposureCompensation(1);
                 mCameraProxyImp.setCameraParameters(parameters);

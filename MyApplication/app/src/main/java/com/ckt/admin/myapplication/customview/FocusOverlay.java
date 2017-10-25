@@ -23,8 +23,10 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
     private final float FOCUS_CIRCLE_RATE_MIDDLE = 1.0f;
     private final int FOCUS_CIRCLE_ANIMATOR_TIME_FIRST = 300;
     private final int FOCUS_CIRCLE_ANIMATOR_TIME_SECOND = 150;
+    private final int FOCUS_DELAY_TIME = 2000;
     private final int FOCUS_MIDDLE_RECT_WIDTH = 15;
     private final int FOCUS_MIDDLE_RECT_HEIGHT = 30;
+    private final int CIRCLE_PAINT_STROKE = 3;
     private final int FOCUS_STATE_PROCESSING = 0x0001;
     private final int FOCUS_STATE_SUCCESS = 0x0010;
     private final int FOCUS_STATE_FAILD = 0x0100;
@@ -33,8 +35,8 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
     private int mViewWidth;
     private int mViewHeight;
     private float mRadius = FOCUS_CIRCLE_SIZE;
-    private int mPositionX;
-    private int mPositionY;
+    private int mPositionX = -100;
+    private int mPositionY = -100;
     private Handler mHandler = new FocusHandler();
     private Context mContext;
 
@@ -52,7 +54,7 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
         circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         circlePaint.setColor(mContext.getResources().getColor(R.color.panorama_mode_color));
         circlePaint.setStyle(Paint.Style.STROKE);
-        circlePaint.setStrokeWidth(4);
+        circlePaint.setStrokeWidth(CIRCLE_PAINT_STROKE);
     }
 
     @Override
@@ -66,11 +68,8 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
             wSize = 75;
             hSize = 75;
         }
-        ;
         mViewWidth = wSize;
         mViewHeight = hSize;
-        mPositionX = wSize / 2;
-        mPositionY = hSize / 2;
         setMeasuredDimension(wSize, hSize);
     }
 
@@ -126,12 +125,12 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
 
     @Override
     public void focusSuccess() {
-        mHandler.sendEmptyMessageDelayed(FOCUS_STATE_SUCCESS, 800);
+        mHandler.sendEmptyMessageDelayed(FOCUS_STATE_SUCCESS, FOCUS_DELAY_TIME);
     }
 
     @Override
     public void focusFaild() {
-        mHandler.sendEmptyMessageDelayed(FOCUS_STATE_FAILD, 800);
+        mHandler.sendEmptyMessageDelayed(FOCUS_STATE_FAILD, FOCUS_DELAY_TIME);
     }
 
     private class FocusHandler extends Handler {
@@ -160,7 +159,6 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
                         public void onAnimationUpdate(ValueAnimator valueAnimator) {
                             float rate = (float) valueAnimator.getAnimatedValue();
                             mRadius = rate * FOCUS_CIRCLE_SIZE;
-                            Log.e(TAG, "liang.chen rate->" + rate + "  mRadius->" + mRadius);
                             invalidate();
                         }
                     });
@@ -170,15 +168,11 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
                     break;
 
                 case FOCUS_STATE_SUCCESS:
-                    circlePaint.setColor(mContext.getResources().getColor(R.color.focus_debug_success));
-                    invalidate();
-                    this.sendEmptyMessageDelayed(FOCUS_STATE_INVISIBALE, 1000);
+                    setPaintColor(R.color.focus_debug_success);
                     break;
 
                 case FOCUS_STATE_FAILD:
-                    circlePaint.setColor(mContext.getResources().getColor(R.color.pano_progress_indication_fast));
-                    invalidate();
-                    this.sendEmptyMessageDelayed(FOCUS_STATE_INVISIBALE, 1000);
+                    setPaintColor(R.color.pano_progress_indication_fast);
                     break;
                 case FOCUS_STATE_INVISIBALE:
                     setVisibility(View.GONE);
@@ -189,5 +183,11 @@ public class FocusOverlay extends View implements FocusOverlayManager.IFocusUiHa
                     break;
             }
         }
+    }
+
+    private void setPaintColor(int colorId) {
+        circlePaint.setColor(mContext.getResources().getColor(colorId));
+        invalidate();
+        mHandler.sendEmptyMessageDelayed(FOCUS_STATE_INVISIBALE, 1000);
     }
 }
