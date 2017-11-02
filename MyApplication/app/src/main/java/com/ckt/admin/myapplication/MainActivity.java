@@ -1,6 +1,8 @@
 package com.ckt.admin.myapplication;
 
 import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +12,8 @@ import android.content.pm.PackageManager;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.net.Uri;
@@ -19,18 +23,25 @@ import android.os.IBinder;
 import android.os.Message;
 import android.preference.PreferenceManager;
 
+import android.support.annotation.DrawableRes;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageButton;
+import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +49,7 @@ import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
 import com.ckt.admin.myapplication.customview.BottomBarView;
 import com.ckt.admin.myapplication.customview.FocusOverlay;
+import com.ckt.admin.myapplication.customview.SettingPopupWindow;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
 import com.ckt.admin.myapplication.manager.CameraManager.CameraPorxy;
@@ -53,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private final String TAG = "MainActivity";
     private static final int MAIN_CAMERA_ID = 0;
     private static final int SUB_CAMERA_ID = 2;
+    private int mCurrentCameraId = MAIN_CAMERA_ID;
+    private boolean switchCamera = false;
 
     private final int OPEN_CAMERA = 0;
     private final int START_PREVIEW = 1;
@@ -72,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     private boolean mHasCriticalPermissions;
     private SurfaceHolder mSurfaceHolder;
-    private Handler CameraCmdHnadler;
+    private Handler CameraCmdHandler;
     public FileSaveServices mFileSaveServices;
     private FileSaveServices.OnImageSaveListener imageSaveListener;
     private int mPhoneOrientation;
@@ -80,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private OrientationEventListener mPhoneOrientataionEventListener;
     private Camera.AutoFocusCallback autoFocusCallback;
     private FocusOverlayManager mFocusOverlayManager;
+    private RelativeLayout mParent;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -95,12 +110,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-        Log.d(TAG, "liang.chen init");
         init();
     }
 
     private void init() {
         //init view and data
+        mParent = (RelativeLayout) findViewById(R.id.activity_main);
         mTextView = (TextView) findViewById(R.id.tv);
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
@@ -112,29 +127,62 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mCameraManager = new CameraManagerImp();
-        CameraCmdHnadler = new CameraHandler();
+        CameraCmdHandler = new CameraHandler();
         mFocusOverlayManager = new FocusOverlayManager(MainActivity.this);
         autoFocusCallback = new Camera.AutoFocusCallback() {
             @Override
             public void onAutoFocus(boolean b, Camera camera) {
                 if (b) {
                     mFocusOverlay.focusSuccess();
-                    Toast.makeText(MainActivity.this, "对焦成功", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this, "对焦成功", Toast.LENGTH_SHORT).show();
                 } else {
                     mFocusOverlay.focusFaild();
                 }
             }
         };
         mBottonBarView.setBottonBarViewListener(new BottomBarView.BottonBarViewListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onThumbnailClickListener() {
-                Log.e(TAG, "liang.chen onThumbnailClickListener");
+                Log.d(TAG, "onThumbnailClickListener");
+                SettingPopupWindow settingPopupWindow = new SettingPopupWindow(MainActivity.this);
+                settingPopupWindow.showInParentView(mParent);
+                controlAnimation(mBottonBarView, 0.0f, 1.0f, 250, View.GONE);
+                settingPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        controlAnimation(mBottonBarView, 1.0f, 0.0f, 250, View.VISIBLE);
+                    }
+                });
+            }
+
+            public void controlAnimation(final View view1, float from, float to, long duration, final int isVisible) {
+                TranslateAnimation translateAnimation = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
+                        Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, from, Animation.RELATIVE_TO_SELF, to);
+                translateAnimation.setDuration(duration);
+                translateAnimation.setAnimationListener(new Animation.AnimationListener() {
+                    @Override
+                    public void onAnimationStart(Animation animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animation animation) {
+                        view1.setVisibility(isVisible);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animation animation) {
+
+                    }
+                });
+                view1.startAnimation(translateAnimation);
             }
 
             @Override
             public void onShutterClickListener() {
-                Log.e(TAG, "liang.chen onShutterClickListener");
-                CameraCmdHnadler.sendEmptyMessage(TAKE_PICTURE);
+                Log.d(TAG, "onShutterClickListener");
+                CameraCmdHandler.sendEmptyMessage(TAKE_PICTURE);
                 imageSaveListener = new FileSaveServices.OnImageSaveListener() {
                     @Override
                     public void onImageSaveFinish(Uri uri) {
@@ -214,30 +262,40 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
         Log.d(TAG, "surfaceChanged");
-        Message msg = CameraCmdHnadler.obtainMessage();
+        Message msg = CameraCmdHandler.obtainMessage();
         msg.what = START_PREVIEW;
         msg.obj = surfaceHolder;
-        CameraCmdHnadler.sendMessage(msg);
+        CameraCmdHandler.sendMessage(msg);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         Log.d(TAG, "surfaceDestroyed");
-        CameraCmdHnadler.sendEmptyMessage(STOP_PREVIEW);
-        CameraCmdHnadler.sendEmptyMessage(RELEASE);
+        CameraCmdHandler.sendEmptyMessage(STOP_PREVIEW);
+        CameraCmdHandler.sendEmptyMessage(RELEASE);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.imgb_setting_extra:
-
                 //Toast.makeText(MainActivity.this, "extra img", Toast.LENGTH_SHORT).show();
-
                 break;
 
             case R.id.imgb_setting_switch:
-
+                switchCamera = switchCamera ? false : true;
+                if (switchCamera) {
+                    mCurrentCameraId = SUB_CAMERA_ID;
+                } else {
+                    mCurrentCameraId = MAIN_CAMERA_ID;
+                }
+                CameraCmdHandler.sendEmptyMessage(STOP_PREVIEW);
+                CameraCmdHandler.sendEmptyMessage(RELEASE);
+                Message msg = CameraCmdHandler.obtainMessage();
+                msg.what = START_PREVIEW;
+                msg.obj = mSurfaceHolder;
+                CameraCmdHandler.sendMessage(msg);
                 break;
             default:
                 //nothing to do
@@ -248,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            Log.e(TAG, "liang.chen onServiceConnected");
+            Log.d(TAG, "onServiceConnected");
             CameraUtil.checkCameraFolder();
             CameraUtil.checkDebugFolder();
             FileSaveServices.MyBinder myBinder = (FileSaveServices.MyBinder) iBinder;
@@ -273,9 +331,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                 case START_PREVIEW:
                     SurfaceHolder surfaceHolder = (SurfaceHolder) msg.obj;
-                    mCameraProxyImp = mCameraManager.getCamera(MAIN_CAMERA_ID);
+                    mCameraProxyImp = mCameraManager.getCamera(mCurrentCameraId);
                     mParamters = mCameraProxyImp.getCameraParameters();
-                    // TODO: will can be set
+                    // TODO: will set
                     mParamters.setPictureSize(4160, 3120);
                     mParamters.setRotation(0);
                     mCameraProxyImp.setCameraParameters(mParamters);

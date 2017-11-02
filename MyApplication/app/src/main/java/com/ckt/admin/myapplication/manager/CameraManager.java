@@ -17,6 +17,8 @@ public interface CameraManager {
 
     public void setCameraParameters(Camera.Parameters cameraParameters);
 
+    public void updateCameraParameters(CameraPorxy cameraProxy, Camera.Parameters cameraParameters);
+
     public void release();
 
     /**
@@ -46,6 +48,8 @@ public interface CameraManager {
         public void takePicture(CameraShutterCallback shutterCallback, CameraPictureCallback rawCallback, CameraPictureCallback postviewCallback, CameraPictureCallback jpegCallback);
 
         public void autoFocus(Camera.AutoFocusCallback cb);
+
+        public int getCamreaNumbers();
 
     }
 
