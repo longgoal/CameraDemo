@@ -48,6 +48,11 @@ public class CameraManagerImp implements CameraManager {
     }
 
     @Override
+    public void updateCameraParameters(CameraPorxy cameraProxy, Camera.Parameters cameraParameters) {
+        cameraProxy.setCameraParameters(cameraParameters);
+    }
+
+    @Override
     public void release() {
         mCameraPorxy.release();
     }
@@ -137,6 +142,11 @@ public class CameraManagerImp implements CameraManager {
         @Override
         public void autoFocus(Camera.AutoFocusCallback cb) {
             camera.autoFocus(cb);
+        }
+
+        @Override
+        public int getCamreaNumbers() {
+            return camera.getNumberOfCameras();
         }
 
     }
