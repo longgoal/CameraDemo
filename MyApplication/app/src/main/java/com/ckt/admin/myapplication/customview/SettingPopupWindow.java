@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -40,13 +41,15 @@ public class SettingPopupWindow extends PopupWindow {
     public SettingPopupWindow(final Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.mContext = context;
-
+        /*
         TextView view1 = new TextView(context);
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         view1.setLayoutParams(layoutParams);
         view1.setText("PopupWindowceshi ");
         view1.setTextColor(context.getResources().getColor(R.color.blue_button_text_color));
         view1.setTextSize(15);
+        */
+        /*
         LinearLayout linearLayout = new LinearLayout(context);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         WindowManager.LayoutParams layoutParams1 = new WindowManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -58,17 +61,23 @@ public class SettingPopupWindow extends PopupWindow {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(context,"popupWindow tan chu ",Toast.LENGTH_SHORT).show();;
+                Toast.makeText(context, "popupWindow tan chu ", Toast.LENGTH_SHORT).show();
+
             }
         });
-        linearLayout.addView(button,layoutParams);
+        linearLayout.addView(button, layoutParams);
+        */
         mScreenWidth = CameraUtil.getWindowWidth(context);
         mScreenHeight = CameraUtil.getWindowHeigh(context);
         setWidth(mScreenWidth);
         setHeight(mScreenHeight / 5);
-        setContentView(linearLayout);
+        setClippingEnabled(false);
+        LayoutInflater lay = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View view = lay.inflate(R.layout.setting_control_content, null);
+        setContentView(view);
         setAnimationStyle(R.style.settingPopupWindow);
         setFocusable(true);
+        update();
         ColorDrawable colorDrawable = new ColorDrawable();
         colorDrawable.setColor(context.getResources().getColor(R.color.review_background));
         colorDrawable.setAlpha(BACKGROUND_ALAPH);
@@ -79,5 +88,8 @@ public class SettingPopupWindow extends PopupWindow {
         showAtLocation(parent, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0);
     }
 
+    public interface ISettingBtnListener {
 
+
+    }
 }
