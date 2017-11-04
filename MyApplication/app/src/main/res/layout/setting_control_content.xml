@@ -20,7 +20,16 @@
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:layout_marginLeft="10dp"
-                android:background="@drawable/setting_off" />
+                android:background="@drawable/frame1_1" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_size"
+                android:layout_below="@id/imgb_setting_size"
+                android:layout_marginLeft="10dp"
+                android:text="画幅"
+                android:textColor="@color/white" />
 
             <ImageButton
                 android:id="@+id/imgb_setting_flash"
@@ -30,7 +39,16 @@
                 android:layout_gravity="center_vertical"
                 android:layout_marginLeft="10dp"
                 android:layout_toRightOf="@id/imgb_setting_size"
-                android:background="@drawable/setting_off" />
+                android:background="@drawable/flash_off" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_flash"
+                android:layout_below="@id/imgb_setting_flash"
+                android:layout_marginLeft="10dp"
+                android:text="闪光灯"
+                android:textColor="@color/white" />
 
             <ImageButton
                 android:id="@+id/imgb_setting_aesync"
@@ -42,6 +60,15 @@
                 android:layout_toRightOf="@id/imgb_setting_flash"
                 android:background="@drawable/setting_off" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_aesync"
+                android:layout_below="@id/imgb_setting_aesync"
+                android:layout_marginLeft="10dp"
+                android:text="AE Sync"
+                android:textColor="@color/white" />
+
             <ImageButton
                 android:id="@+id/imgb_setting_framesync"
                 android:layout_width="wrap_content"
@@ -51,6 +78,15 @@
                 android:layout_marginLeft="10dp"
                 android:layout_toRightOf="@id/imgb_setting_aesync"
                 android:background="@drawable/setting_off" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_framesync"
+                android:layout_below="@id/imgb_setting_framesync"
+                android:layout_marginLeft="10dp"
+                android:text="Frame Sync"
+                android:textColor="@color/white" />
 
             <ImageButton
                 android:id="@+id/imgb_setting_zsl"
@@ -62,6 +98,15 @@
                 android:layout_toRightOf="@id/imgb_setting_framesync"
                 android:background="@drawable/setting_off" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_zsl"
+                android:layout_below="@id/imgb_setting_zsl"
+                android:layout_marginLeft="10dp"
+                android:text="ZSL"
+                android:textColor="@color/white" />
+
             <ImageButton
                 android:id="@+id/imgb_setting_zsd"
                 android:layout_width="wrap_content"
@@ -71,6 +116,16 @@
                 android:layout_marginLeft="10dp"
                 android:layout_toRightOf="@id/imgb_setting_zsl"
                 android:background="@drawable/setting_off" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_zsd"
+                android:layout_below="@id/imgb_setting_zsd"
+                android:layout_marginLeft="10dp"
+                android:enabled="false"
+                android:text="ZSD"
+                android:textColor="@color/white" />
 
             <ImageButton
                 android:id="@+id/imgb_setting_view_ois"
@@ -82,6 +137,15 @@
                 android:layout_toRightOf="@id/imgb_setting_zsd"
                 android:background="@drawable/setting_off" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_view_ois"
+                android:layout_below="@id/imgb_setting_view_ois"
+                android:layout_marginLeft="10dp"
+                android:text="OIS"
+                android:textColor="@color/white" />
+
             <ImageButton
                 android:id="@+id/imgb_setting_extra"
                 android:layout_width="wrap_content"
@@ -91,6 +155,16 @@
                 android:layout_marginLeft="10dp"
                 android:layout_toRightOf="@id/imgb_setting_view_ois"
                 android:background="@drawable/setting_off" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@id/imgb_setting_extra"
+                android:layout_below="@id/imgb_setting_extra"
+                android:layout_marginLeft="10dp"
+                android:text="高级设置"
+                android:textColor="@color/white" />
+
         </RelativeLayout>
     </HorizontalScrollView>
 </LinearLayout>

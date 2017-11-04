@@ -96,6 +96,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private FocusOverlayManager mFocusOverlayManager;
     private RelativeLayout mParent;
 
+
+    //// TODO: temp data , will use SharePreference
+    private String[] mFlashModeValue = {"on", "auto", "torch", "off"};
+    private int mCurrentFlashMode = 3;
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +113,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE
+        );
+
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
         init();
@@ -145,13 +159,62 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onThumbnailClickListener() {
                 Log.d(TAG, "onThumbnailClickListener");
+
                 SettingPopupWindow settingPopupWindow = new SettingPopupWindow(MainActivity.this);
                 settingPopupWindow.showInParentView(mParent);
+                settingPopupWindow.setSettingBtnListener(new SettingPopupWindow.ISettingBtnListener() {
+                    @Override
+                    public void setFrameSize(int which) {
+                        Log.d(TAG, "liang.chen setFrameSize");
+                    }
+
+                    @Override
+                    public void setFlash(boolean isOn) {
+                        Camera.Parameters parameters = mCameraProxyImp.getCameraParameters();
+                        String flashModeStr = mFlashModeValue[mCurrentFlashMode++];
+                        mCurrentFlashMode = mCurrentFlashMode % 4;
+                        parameters.setFlashMode(flashModeStr);
+                        mCameraProxyImp.setCameraParameters(parameters);
+                    }
+
+                    @Override
+                    public void setFrameSync(boolean isOn) {
+                        Log.d(TAG, "liang.chen setFrameSync");
+                    }
+
+                    @Override
+                    public void setZSL(boolean isOn) {
+                        Log.d(TAG, "liang.chen setZSL");
+                    }
+
+                    @Override
+                    public void setZSD(boolean isOn) {
+                        Log.d(TAG, "liang.chen setZSD");
+                    }
+
+                    @Override
+                    public void setOis(boolean isOn) {
+                        Log.d(TAG, "liang.chen setOis");
+                    }
+
+                    @Override
+                    public void setExtraSetting() {
+                        Log.d(TAG, "liang.chen setExtraSetting");
+                    }
+                });
+                //settingPopupWindow.setFocusable(true);
                 controlAnimation(mBottonBarView, 0.0f, 1.0f, 250, View.GONE);
                 settingPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
                     @Override
                     public void onDismiss() {
                         controlAnimation(mBottonBarView, 1.0f, 0.0f, 250, View.VISIBLE);
+                        getWindow().getDecorView().setSystemUiVisibility(
+                                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                                        | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                                        | View.SYSTEM_UI_FLAG_IMMERSIVE);
                     }
                 });
             }
@@ -336,6 +399,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     // TODO: will set
                     mParamters.setPictureSize(4160, 3120);
                     mParamters.setRotation(0);
+                    Camera.Size size = mParamters.getPreviewSize();
+                    Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height +
+                            "   screen width:" + CameraUtil.getWindowWidth(MainActivity.this) + "  screen height:" + CameraUtil.getWindowHeigh(MainActivity.this));
+                    //mParamters.setPreviewSize(640, 480);
+                    //Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height);
                     mCameraProxyImp.setCameraParameters(mParamters);
                     mCameraProxyImp.setSurfaceHolder(surfaceHolder);
                     mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
@@ -443,4 +511,5 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
         return super.onTouchEvent(event);
     }
+
 }
