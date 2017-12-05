@@ -3,6 +3,7 @@ package com.ckt.admin.myapplication;
 import android.Manifest;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
+import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
@@ -63,7 +65,7 @@ import com.ckt.admin.myapplication.util.PermissionsActivity;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
-    private static final int MAIN_CAMERA_ID = 0;
+    private static final int MAIN_CAMERA_ID = 3;
     private static final int SUB_CAMERA_ID = 2;
     private int mCurrentCameraId = MAIN_CAMERA_ID;
     private boolean switchCamera = false;
@@ -101,6 +103,56 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private String[] mFlashModeValue = {"on", "auto", "torch", "off"};
     private int mCurrentFlashMode = 3;
 
+    //内存监听
+    private ComponentCallbacks2 mComponentCallbacks2 = new ComponentCallbacks2() {
+        @Override
+        public void onTrimMemory(int level) {
+
+            switch (level) {
+                case TRIM_MEMORY_UI_HIDDEN:
+                    Toast.makeText(MainActivity.this, "TRIM_MEMORY_UI_HIDDEN", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                case TRIM_MEMORY_RUNNING_MODERATE:
+                    Toast.makeText(MainActivity.this, "TRIM_MEMORY_RUNNING_MODERATE", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                case TRIM_MEMORY_RUNNING_LOW:
+                    Toast.makeText(MainActivity.this, "TRIM_MEMORY_RUNNING_LOW", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                case TRIM_MEMORY_RUNNING_CRITICAL:
+                    Toast.makeText(MainActivity.this, "TRIM_MEMORY_RUNNING_CRITICAL", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                case TRIM_MEMORY_BACKGROUND:
+                    Toast.makeText(MainActivity.this, "TRIM_MEMORY_BACKGROUND", Toast.LENGTH_SHORT).show();
+
+                    break;
+
+                default:
+                    break;
+
+
+            }
+
+        }
+
+        @Override
+        public void onConfigurationChanged(Configuration newConfig) {
+
+        }
+
+        @Override
+        public void onLowMemory() {
+
+        }
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +180,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     }
 
     private void init() {
+        registerComponentCallbacks(mComponentCallbacks2);
         //init view and data
         mParent = (RelativeLayout) findViewById(R.id.activity_main);
         mTextView = (TextView) findViewById(R.id.tv);
@@ -511,5 +564,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         }
         return super.onTouchEvent(event);
     }
+
 
 }
