@@ -35,7 +35,10 @@ public interface CameraManager {
 
         public void setSurfaceHolder(SurfaceHolder surfaceHolder);
 
+
         public void startPreview();
+
+        public void setPreviewCallback(Camera.PreviewCallback callback);
 
         public void stopPreview();
 

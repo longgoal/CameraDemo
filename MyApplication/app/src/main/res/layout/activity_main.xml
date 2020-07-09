@@ -7,7 +7,7 @@
     tools:context="com.ckt.admin.myapplication.MainActivity">
 
 
-    <SurfaceView
+    <com.ckt.admin.myapplication.customview.ResizeAbleSurfaceView
         android:id="@+id/surfaceview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -24,20 +24,33 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/surfaceview"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
+        android:layout_alignLeft="@+id/surfaceview"
+        android:layout_marginLeft="50dp"
+        android:layout_marginTop="100dp"
         android:background="@drawable/setting_extra" />
 
     <ImageButton
         android:id="@+id/imgb_setting_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/surfaceview"
-        android:layout_alignTop="@+id/surfaceview"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/setting_switch" />
 
+        android:layout_toRightOf="@+id/imgb_setting_extra"
+        android:layout_marginLeft="50dp"
+        android:layout_alignTop="@+id/surfaceview"
+        android:layout_marginTop="100dp"
+        android:background="@drawable/setting_switch" />
+<!--
+    <ImageButton
+        android:id="@+id/imgb_setting_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_toRightOf="@+id/imgb_setting_extra"
+        android:layout_alignTop="@+id/surfaceview"
+        android:layout_marginRight="40dp"
+        android:layout_marginTop="100dp"
+        android:background="@drawable/setting_switch" />
+-->
     <TextView
         android:id="@+id/tv"
         android:layout_width="match_parent"

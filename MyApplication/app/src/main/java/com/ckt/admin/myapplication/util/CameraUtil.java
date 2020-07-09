@@ -45,8 +45,12 @@ public class CameraUtil {
         int roration = getPhoneRotation(phoneOrientation);
         if (phoneOrientation != OrientationEventListener.ORIENTATION_UNKNOWN) {
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                Log.d(TAG,"front orientation="+cameraInfo.orientation);
+                //cameraInfo.orientation = 270;
                 r = (cameraInfo.orientation - roration + 360) % 360;
             } else if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                Log.d(TAG,"back orientation="+cameraInfo.orientation);
+                //cameraInfo.orientation = 90;
                 r = (cameraInfo.orientation + roration) % 360;
             }
         }
@@ -54,15 +58,19 @@ public class CameraUtil {
     }
 
     public static int getPhoneRotation(int phoneOrientation) {
-        if (phoneOrientation <= 5 || phoneOrientation >= 355)
-            return 0;
-        else if (phoneOrientation >= 85 && phoneOrientation <= 95)
-            return 90;
-        else if (phoneOrientation >= 175 && phoneOrientation <= 185)
-            return 180;
-        else if (phoneOrientation >= 265 && phoneOrientation <= 275)
-            return 270;
-        return 0;
+//        if (phoneOrientation <= 5 || phoneOrientation >= 355)
+//            return 0;
+//        else if (phoneOrientation >= 85 && phoneOrientation <= 95)
+//            return 90;
+//        else if (phoneOrientation >= 175 && phoneOrientation <= 185)
+//            return 180;
+//        else if (phoneOrientation >= 265 && phoneOrientation <= 275)
+//            return 270;
+//        return 0;
+        int input = phoneOrientation;
+        phoneOrientation = ((phoneOrientation + 45) / 90 * 90)%360;
+        Log.d(TAG,"getPhoneRotation phoneOrientation="+phoneOrientation+",input="+input);
+        return  phoneOrientation;
     }
 
     public static String getRealFilePath(final Context context, final Uri uri) {

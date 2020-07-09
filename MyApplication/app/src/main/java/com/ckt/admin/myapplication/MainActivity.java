@@ -33,6 +33,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -51,6 +52,7 @@ import com.ckt.admin.myapplication.Exif.Exif;
 import com.ckt.admin.myapplication.Exif.ExifInterface;
 import com.ckt.admin.myapplication.customview.BottomBarView;
 import com.ckt.admin.myapplication.customview.FocusOverlay;
+import com.ckt.admin.myapplication.customview.ResizeAbleSurfaceView;
 import com.ckt.admin.myapplication.customview.SettingPopupWindow;
 import com.ckt.admin.myapplication.manager.CameraManagerImp;
 import com.ckt.admin.myapplication.manager.CameraManager;
@@ -65,9 +67,9 @@ import com.ckt.admin.myapplication.util.PermissionsActivity;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
-    private static final int MAIN_CAMERA_ID = 3;
-    private static final int SUB_CAMERA_ID = 2;
-    private int mCurrentCameraId = MAIN_CAMERA_ID;
+    private static final int MAIN_CAMERA_ID = 0;
+    private static final int SUB_CAMERA_ID = 1;
+    private int mCurrentCameraId = 0;
     private boolean switchCamera = false;
 
     private final int OPEN_CAMERA = 0;
@@ -80,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private CameraPorxy mCameraProxyImp;
     private Camera.Parameters mParamters;
     private TextView mTextView;
-    private SurfaceView mSurfaceView;
+    private ResizeAbleSurfaceView mSurfaceView;
     private BottomBarView mBottonBarView;
     private ImageButton mImageButtonExtra;
     private ImageButton mImageButtonSwitch;
@@ -184,7 +186,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         //init view and data
         mParent = (RelativeLayout) findViewById(R.id.activity_main);
         mTextView = (TextView) findViewById(R.id.tv);
-        mSurfaceView = (SurfaceView) findViewById(R.id.surfaceview);
+        mSurfaceView = (ResizeAbleSurfaceView) findViewById(R.id.surfaceview);
+        mSurfaceView.resize(720,1280);
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
         mImageButtonExtra = (ImageButton) findViewById(R.id.imgb_setting_extra);
         mImageButtonSwitch = (ImageButton) findViewById(R.id.imgb_setting_switch);
@@ -328,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onOrientationChanged(int i) {
                 mPhoneOrientation = i;
+                Log.d(TAG,"mPhoneOrientation="+mPhoneOrientation);
             }
         };
     }
@@ -378,10 +382,16 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
         Log.d(TAG, "surfaceChanged");
-        Message msg = CameraCmdHandler.obtainMessage();
-        msg.what = START_PREVIEW;
-        msg.obj = surfaceHolder;
-        CameraCmdHandler.sendMessage(msg);
+        int counts = mCameraManager.getCameraNums();
+        if(counts > 0) {
+            Message msg = CameraCmdHandler.obtainMessage();
+            msg.what = START_PREVIEW;
+            msg.obj = surfaceHolder;
+            msg.arg1 = counts;
+            CameraCmdHandler.sendMessage(msg);
+        } else {
+            Log.d(TAG, "no camere");
+        }
     }
 
     @Override
@@ -447,19 +457,25 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                 case START_PREVIEW:
                     SurfaceHolder surfaceHolder = (SurfaceHolder) msg.obj;
+                    int count = msg.arg1;
+
                     mCameraProxyImp = mCameraManager.getCamera(mCurrentCameraId);
                     mParamters = mCameraProxyImp.getCameraParameters();
                     // TODO: will set
-                    mParamters.setPictureSize(4160, 3120);
+
+                    //mParamters.setPictureSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
+                    //mParamters.setPictureSize(4160, 3120);
                     mParamters.setRotation(0);
                     Camera.Size size = mParamters.getPreviewSize();
                     Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height +
                             "   screen width:" + CameraUtil.getWindowWidth(MainActivity.this) + "  screen height:" + CameraUtil.getWindowHeigh(MainActivity.this));
+                    //mParamters.setPreviewSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
                     //mParamters.setPreviewSize(640, 480);
                     //Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height);
                     mCameraProxyImp.setCameraParameters(mParamters);
                     mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-                    mCameraProxyImp.setDisplayOrientation(CameraParameters.PREVIEW_ROTATION_90);
+                    mCameraProxyImp.setDisplayOrientation(getCameraDisplayOrientation(mCurrentCameraId));
+                    mCameraProxyImp.setPreviewCallback(new MyPreviewCallback());
                     mCameraProxyImp.startPreview();
                     break;
 
@@ -477,7 +493,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                 case TAKE_PICTURE:
                     Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-                    Camera.getCameraInfo(0, cameraInfo);
+                    Camera.getCameraInfo(mCurrentCameraId, cameraInfo);
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
                     upCameraParameters(mParamters);
@@ -506,6 +522,45 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
             }
         }
+    }
+    public class MyPreviewCallback  implements   Camera.PreviewCallback {
+        @Override
+        public void onPreviewFrame(byte[] data, Camera camera){
+            Log.d(TAG,"onPreviewFrame");
+        }
+    };
+    public int getCameraDisplayOrientation (int cameraId) {
+        Camera.CameraInfo info = new Camera.CameraInfo();
+        Camera.getCameraInfo (cameraId , info);
+        int rotation = getWindowManager ().getDefaultDisplay ().getRotation ();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            Log.d(TAG,"front orientation="+info.orientation);
+            //info.orientation = 270;
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;   // compensate the mirror
+        } else {
+            // back-facing
+            Log.d(TAG,"back orientation="+info.orientation);
+            //info.orientation = 90;
+            result = ( info.orientation - degrees + 360) % 360;
+        }
+        return result;
     }
 
     @Override
@@ -541,24 +596,24 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                Rect rect = new Rect(0, 0, CameraUtil.getWindowWidth(MainActivity.this), CameraUtil.getWindowHeigh(MainActivity.this));
-                mFocusOverlayManager.setmPreviewRect(rect);
-                mFocusOverlayManager.setScreenWidth(CameraUtil.getWindowWidth(MainActivity.this));
-                mFocusOverlayManager.setScreenHeight(CameraUtil.getWindowHeigh(MainActivity.this));
-                mFocusOverlayManager.setmFocusAreas((int) event.getX(), (int) event.getY());
-                mFocusOverlayManager.setmMeteringArea((int) event.getX(), (int) event.getY());
-                Camera.Parameters parameters = mCameraProxyImp.getCameraParameters();
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-                parameters.setFocusAreas(mFocusOverlayManager.getmFocusAreas());
-                parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
-                final int min = parameters.getMinExposureCompensation();
-                final int max = parameters.getMaxExposureCompensation();
-                //focus ui start
-                mFocusOverlay.setPosition((int) event.getX(), (int) event.getY());
-                // TODO: 2017/10/17 will add exposure Compensation
-                parameters.setExposureCompensation(1);
-                mCameraProxyImp.setCameraParameters(parameters);
-                mCameraProxyImp.autoFocus(autoFocusCallback);
+//                Rect rect = new Rect(0, 0, CameraUtil.getWindowWidth(MainActivity.this), CameraUtil.getWindowHeigh(MainActivity.this));
+//                mFocusOverlayManager.setmPreviewRect(rect);
+//                mFocusOverlayManager.setScreenWidth(CameraUtil.getWindowWidth(MainActivity.this));
+//                mFocusOverlayManager.setScreenHeight(CameraUtil.getWindowHeigh(MainActivity.this));
+//                mFocusOverlayManager.setmFocusAreas((int) event.getX(), (int) event.getY());
+//                mFocusOverlayManager.setmMeteringArea((int) event.getX(), (int) event.getY());
+//                Camera.Parameters parameters = mCameraProxyImp.getCameraParameters();
+//                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+//                parameters.setFocusAreas(mFocusOverlayManager.getmFocusAreas());
+//                parameters.setMeteringAreas(mFocusOverlayManager.getmMeteringArea());
+//                final int min = parameters.getMinExposureCompensation();
+//                final int max = parameters.getMaxExposureCompensation();
+//                //focus ui start
+//                mFocusOverlay.setPosition((int) event.getX(), (int) event.getY());
+//                // TODO: 2017/10/17 will add exposure Compensation
+//                parameters.setExposureCompensation(1);
+//                mCameraProxyImp.setCameraParameters(parameters);
+//                mCameraProxyImp.autoFocus(autoFocusCallback);
             default:
                 break;
         }

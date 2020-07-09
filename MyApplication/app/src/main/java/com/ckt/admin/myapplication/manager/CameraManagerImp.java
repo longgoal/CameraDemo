@@ -107,9 +107,13 @@ public class CameraManagerImp implements CameraManager {
         public void startPreview() {
             camera.startPreview();
         }
-
+        @Override
+        public void setPreviewCallback(Camera.PreviewCallback callback) {
+            camera.setPreviewCallback(callback);
+        }
         @Override
         public void stopPreview() {
+            camera.setPreviewCallback(null);
             camera.stopPreview();
         }
 
