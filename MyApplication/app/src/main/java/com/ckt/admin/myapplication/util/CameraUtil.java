@@ -49,9 +49,10 @@ public class CameraUtil {
                 //cameraInfo.orientation = 270;
                 r = (cameraInfo.orientation - roration + 360) % 360;
             } else if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                Log.d(TAG,"back orientation="+cameraInfo.orientation);
+                //Log.d(TAG,"back orientation="+cameraInfo.orientation);
                 //cameraInfo.orientation = 90;
                 r = (cameraInfo.orientation + roration) % 360;
+                Log.d(TAG,"back orientation="+cameraInfo.orientation+",roration="+roration+",result="+r);
             }
         }
         return r;

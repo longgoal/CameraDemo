@@ -65,6 +65,8 @@ import com.ckt.admin.myapplication.util.CameraUtil;
 import com.ckt.admin.myapplication.util.FileSaveServices;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
     private final String TAG = "MainActivity";
     private static final int MAIN_CAMERA_ID = 0;
@@ -187,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mParent = (RelativeLayout) findViewById(R.id.activity_main);
         mTextView = (TextView) findViewById(R.id.tv);
         mSurfaceView = (ResizeAbleSurfaceView) findViewById(R.id.surfaceview);
-        mSurfaceView.resize(720,1280);
+        mSurfaceView.resize(1024,600);
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
         mImageButtonExtra = (ImageButton) findViewById(R.id.imgb_setting_extra);
         mImageButtonSwitch = (ImageButton) findViewById(R.id.imgb_setting_switch);
@@ -331,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onOrientationChanged(int i) {
                 mPhoneOrientation = i;
-                Log.d(TAG,"mPhoneOrientation="+mPhoneOrientation);
+                //Log.d(TAG,"mPhoneOrientation="+mPhoneOrientation);
             }
         };
     }
@@ -456,6 +458,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case START_PREVIEW:
+
                     SurfaceHolder surfaceHolder = (SurfaceHolder) msg.obj;
                     int count = msg.arg1;
 
@@ -465,16 +468,19 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                     //mParamters.setPictureSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
                     //mParamters.setPictureSize(4160, 3120);
-                    mParamters.setRotation(0);
+                    //mParamters.setRotation(0);
                     Camera.Size size = mParamters.getPreviewSize();
+                    List<Camera.Size> previewSizes =  mParamters.getSupportedPreviewSizes();
+                    List<Camera.Size> videoSizes = mParamters.getSupportedVideoSizes();
+
                     Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height +
                             "   screen width:" + CameraUtil.getWindowWidth(MainActivity.this) + "  screen height:" + CameraUtil.getWindowHeigh(MainActivity.this));
                     //mParamters.setPreviewSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
-                    //mParamters.setPreviewSize(640, 480);
+                    mParamters.setPreviewSize(960, 288);
                     //Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height);
                     mCameraProxyImp.setCameraParameters(mParamters);
                     mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-                    mCameraProxyImp.setDisplayOrientation(getCameraDisplayOrientation(mCurrentCameraId));
+                    mCameraProxyImp.setDisplayOrientation(0);
                     mCameraProxyImp.setPreviewCallback(new MyPreviewCallback());
                     mCameraProxyImp.startPreview();
                     break;
@@ -496,6 +502,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     Camera.getCameraInfo(mCurrentCameraId, cameraInfo);
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
+                    mParamters.setPictureSize(960,288);
                     upCameraParameters(mParamters);
                     mBottonBarView.setShutterBtnEnable(false);
                     mBottonBarView.setThumnaiBtnEnable(false);
