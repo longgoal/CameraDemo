@@ -2,11 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/CameraDemo-MyApplication.iml" filepath="$PROJECT_DIR$/CameraDemo-MyApplication.iml" />
       <module fileurl="file://$PROJECT_DIR$/MyApplication.iml" filepath="$PROJECT_DIR$/MyApplication.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/MyApplication-app.iml" filepath="$PROJECT_DIR$/app/MyApplication-app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/java_pro/MyApplication-java_pro.iml" filepath="$PROJECT_DIR$/java_pro/MyApplication-java_pro.iml" />
-      <module fileurl="file://$PROJECT_DIR$/javapro/MyApplication-javapro.iml" filepath="$PROJECT_DIR$/javapro/MyApplication-javapro.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/java_pro/java_pro.iml" filepath="$PROJECT_DIR$/java_pro/java_pro.iml" />
       <module fileurl="file://$PROJECT_DIR$/javapro/javapro.iml" filepath="$PROJECT_DIR$/javapro/javapro.iml" />
