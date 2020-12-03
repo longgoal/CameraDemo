@@ -45,9 +45,10 @@ public class CameraUtil {
         int roration = getPhoneRotation(phoneOrientation);
         if (phoneOrientation != OrientationEventListener.ORIENTATION_UNKNOWN) {
             if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                Log.d(TAG,"front orientation="+cameraInfo.orientation);
+
                 //cameraInfo.orientation = 270;
                 r = (cameraInfo.orientation - roration + 360) % 360;
+                Log.d(TAG,"front orientation="+cameraInfo.orientation+",roration="+roration+",result="+r);
             } else if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
                 //Log.d(TAG,"back orientation="+cameraInfo.orientation);
                 //cameraInfo.orientation = 90;

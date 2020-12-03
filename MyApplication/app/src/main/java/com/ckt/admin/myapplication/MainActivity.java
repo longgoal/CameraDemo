@@ -13,13 +13,17 @@ import android.content.pm.PackageManager;
 
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
 import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -65,6 +69,11 @@ import com.ckt.admin.myapplication.util.CameraUtil;
 import com.ckt.admin.myapplication.util.FileSaveServices;
 import com.ckt.admin.myapplication.util.PermissionsActivity;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener {
@@ -73,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private static final int SUB_CAMERA_ID = 1;
     private int mCurrentCameraId = 0;
     private boolean switchCamera = false;
+    private boolean mPreviewSave = false;
 
     private final int OPEN_CAMERA = 0;
     private final int START_PREVIEW = 1;
@@ -189,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         mParent = (RelativeLayout) findViewById(R.id.activity_main);
         mTextView = (TextView) findViewById(R.id.tv);
         mSurfaceView = (ResizeAbleSurfaceView) findViewById(R.id.surfaceview);
-        mSurfaceView.resize(720,1280);
+        mSurfaceView.resize(960,576);
         mBottonBarView = (BottomBarView) findViewById(R.id.bottonbar);
         mImageButtonExtra = (ImageButton) findViewById(R.id.imgb_setting_extra);
         mImageButtonSwitch = (ImageButton) findViewById(R.id.imgb_setting_switch);
@@ -333,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             @Override
             public void onOrientationChanged(int i) {
                 mPhoneOrientation = i;
-                //Log.d(TAG,"mPhoneOrientation="+mPhoneOrientation);
+                Log.d(TAG,"mPhoneOrientation="+mPhoneOrientation);
             }
         };
     }
@@ -468,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                     //mParamters.setPictureSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
                     //mParamters.setPictureSize(4160, 3120);
-                    mParamters.setRotation(0);
+                    mParamters.setRotation(90);
                     Camera.Size size = mParamters.getPreviewSize();
                     List<Camera.Size> previewSizes =  mParamters.getSupportedPreviewSizes();
                     List<Camera.Size> videoSizes = mParamters.getSupportedVideoSizes();
@@ -476,11 +486,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height +
                             "   screen width:" + CameraUtil.getWindowWidth(MainActivity.this) + "  screen height:" + CameraUtil.getWindowHeigh(MainActivity.this));
                     //mParamters.setPreviewSize(mSurfaceView.getWidth(), mSurfaceView.getHeight());
-                    //mParamters.setPreviewSize(640, 480);
+                    mParamters.setPreviewSize(previewSizes.get(0).width, previewSizes.get(0).height);
                     //Log.d(TAG, "liang.chen current preview size is ->width" + size.width + "   height:" + size.height);
+                    //mParamters.setPreviewFpsRange(7000,20000);
+                    //List<int[]> fpsRanges = mParamters.getSupportedPreviewFpsRange();
+                    //List<Integer> frameRates = mParamters.getSupportedPreviewFrameRates();
+                    //mParamters.setPreviewFrameRate(30);
+                    List<Integer> formats = mParamters.getSupportedPreviewFormats();
+                    int format = mParamters.getPreviewFormat();
                     mCameraProxyImp.setCameraParameters(mParamters);
                     mCameraProxyImp.setSurfaceHolder(surfaceHolder);
-                    mCameraProxyImp.setDisplayOrientation(getCameraDisplayOrientation(mCurrentCameraId));
+                    //mCameraProxyImp.setDisplayOrientation(getCameraDisplayOrientation(mCurrentCameraId));
+                    mCameraProxyImp.setDisplayOrientation(0);
                     mCameraProxyImp.setPreviewCallback(new MyPreviewCallback());
                     mCameraProxyImp.startPreview();
                     break;
@@ -498,11 +515,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
 
                 case TAKE_PICTURE:
+                    //mPreviewSave = true;
                     Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
                     Camera.getCameraInfo(mCurrentCameraId, cameraInfo);
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
-                    //mParamters.setPictureSize(960,288);
+                    List<Camera.Size> picSizes = mParamters.getSupportedPictureSizes();
+                    //mParamters.set("zsl","on");
+                    mParamters.setPictureSize(picSizes.get(0).width,picSizes.get(0).height);
+
                     upCameraParameters(mParamters);
                     mBottonBarView.setShutterBtnEnable(false);
                     mBottonBarView.setThumnaiBtnEnable(false);
@@ -530,12 +551,66 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             }
         }
     }
+    long mLastTime = 0;
     public class MyPreviewCallback  implements   Camera.PreviewCallback {
         @Override
         public void onPreviewFrame(byte[] data, Camera camera){
-            Log.d(TAG,"onPreviewFrame");
+
+            //Log.d(TAG,"onPreviewFrame frame per second =" + 1000/(System.currentTimeMillis() - mLastTime));
+            mLastTime = System.currentTimeMillis();
+            if(!mPreviewSave)
+                return;
+            else
+                mPreviewSave = false;
+            Camera.Size previewSize = camera.getParameters().getPreviewSize();//获取尺寸,格式转换的时候要用到
+            BitmapFactory.Options newOpts = new BitmapFactory.Options();
+            newOpts.inJustDecodeBounds = true;
+            YuvImage yuvimage = new YuvImage(
+                    data,
+                    ImageFormat.NV21,
+                    previewSize.width,
+                    previewSize.height,
+                    null);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 100, baos);// 80--JPG图片的质量[0-100],100最高
+            byte[] rawImage = baos.toByteArray();
+            //将rawImage转换成bitmap
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.RGB_565;
+            Bitmap bitmap = BitmapFactory.decodeByteArray(rawImage, 0, rawImage.length, options);
+            savebitmap(bitmap);
+
         }
     };
+    private void savebitmap(Bitmap bitmap)
+    {
+        //因为xml用的是背景，所以这里也是获得背景
+        //Bitmap bitmap=((BitmapDrawable)(imageView.getBackground())).getBitmap();
+        //创建文件，因为不存在2级目录，所以不用判断exist，要保存png，这里后缀就是png，要保存jpg，后缀就用jpg
+        File file=new File(Environment.getExternalStorageDirectory() +"/mfw.png");
+        try {
+            //文件输出流
+            FileOutputStream fileOutputStream=new FileOutputStream(file);
+            //压缩图片，如果要保存png，就用Bitmap.CompressFormat.PNG，要保存jpg就用Bitmap.CompressFormat.JPEG,质量是100%，表示不压缩
+            bitmap.compress(Bitmap.CompressFormat.PNG,100,fileOutputStream);
+            //写入，这里会卡顿，因为图片较大
+            fileOutputStream.flush();
+            //记得要关闭写入流
+            fileOutputStream.close();
+            //成功的提示，写入成功后，请在对应目录中找保存的图片
+                Toast.makeText(MainActivity.this,"写入成功！目录"+Environment.getExternalStorageDirectory()+"/mfw.png",Toast.LENGTH_SHORT).show();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            //失败的提示
+            Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            //失败的提示
+            Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
     public int getCameraDisplayOrientation (int cameraId) {
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo (cameraId , info);
@@ -563,7 +638,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             result = (360 - result) % 360;   // compensate the mirror
         } else {
             // back-facing
-            Log.d(TAG,"back orientation="+info.orientation);
+            Log.d(TAG,"back orientation="+info.orientation+",display rotation="+rotation);
             //info.orientation = 90;
             result = ( info.orientation - degrees + 360) % 360;
         }
