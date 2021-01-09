@@ -521,7 +521,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     int cameraJpegRotation = CameraUtil.getJpegRotation(mPhoneOrientation, cameraInfo);
                     mParamters.setRotation(cameraJpegRotation);
                     List<Camera.Size> picSizes = mParamters.getSupportedPictureSizes();
-                    //mParamters.set("zsl","on");
+                    mParamters.set("zsl","on");
                     mParamters.setPictureSize(picSizes.get(0).width,picSizes.get(0).height);
 
                     upCameraParameters(mParamters);
